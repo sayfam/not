@@ -3,9 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Note's</title>
 
+
+	<meta http-equiv="Content-Security-Policy" content="
+  default-src 'self';
+  script-src 'self' 'unsafe-inline' 'unsafe-eval' https://apis.google.com https://accounts.google.com https://cdn.jsdelivr.net https://www.gstatic.com https://www.googleapis.com;
+  style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net;
+  img-src 'self' data:;
+  connect-src 'self' https://www.googleapis.com https://accounts.google.com https://securetoken.googleapis.com https://firestore.googleapis.com wss://*.firebaseio.com;
+  frame-src 'self' https://accounts.google.com https://drive.google.com;
+  font-src 'self' https://fonts.gstatic.com;
+  object-src 'none';
+">
+
+	<script>
+  function loadGoogleApi() {
+    const script = document.createElement("script");
+	
+    script.src = "https://apis.google.com/js/api.js";
+    script.onload = initGoogleAuth;
+    document.head.appendChild(script);
+  }
+
+  window.onload = loadGoogleApi;
+</script>
+
+
+
+
+  	<title>Note's</title>
 	<link rel="icon" href="lock.png" type="image/png" />
+	
     <style>
         body {
             background-color: #1e1e2f;
@@ -74,6 +102,7 @@
         }
 
 .listeSatiri {
+position: relative; /* Çocuk elementlerin (kayitZamani) konumlandırılması için */
     background-color: #2a2a40;
     border: 1px solid #444;
     border-radius: 6px;
@@ -82,6 +111,21 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+	 padding-top: 30px; /* Zaman alanı için yukarıdan boşluk bırakın */
+}
+.kayitZamani {
+    position: absolute; /* .listeSatiri'ye göre konumlandırma */
+    top: 5px; /* Üstten biraz boşluk */
+    left: 50%; /* Yatayda ortaya */
+    transform: translateX(-50%); /* Kendi genişliğinin yarısı kadar sola kaydırarak tam ortaya */
+    font-size: 11px; /* Daha küçük font */
+    color: #bbb; /* Biraz daha soluk renk */
+    background-color: #3a3a5a; /* Hafif bir arka plan */
+    padding: 2px 8px;
+    border-radius: 3px;
+    white-space: nowrap; /* Metnin tek satırda kalmasını sağlar */
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2); /* Hafif gölge */
+    z-index: 1; /* Diğer içeriklerin üzerinde görünmesini sağlar */
 }
 
 .listeSatiri span {
@@ -346,22 +390,42 @@ flex: 1; /* Tüm boşluğu kaplasın */
 </head>
 <body>
 
- <!-- Giriş Yapma Ekranı -->
 <div id="loginSection">
     <h2>Giriş Yap</h2>
     <input type="email" id="emailInput" placeholder="Email">
     <input type="password" id="passwordInput" placeholder="Şifre">
     <button onclick="login()">Giriş Yap</button>
-    <p>Hesabınız yok mu? <a href="javascript:void(0);" onclick="showSignup()">Kayıt ol</a></p>
+    
+    <p style="text-align: center; margin-top: 15px; margin-bottom: 5px; font-size: 15px;">
+        Hesabınız yok mu? 
+        <a href="javascript:void(0);" onclick="showSignup()"
+           style="color: #03a9f4; text-decoration: none; transition: color 0.3s ease, text-decoration 0.3s ease;">
+           Kayıt ol
+        </a>
+    </p>
+    
+    <p style="text-align: center; margin-top: 5px; margin-bottom: 20px; font-size: 15px;">
+        <a href="javascript:void(0);" onclick="resetPassword()"
+           style="color: #03a9f4; text-decoration: none; transition: color 0.3s ease, text-decoration 0.3s ease;">
+           Şifremi Unuttum
+        </a>
+    </p>
 </div>
 
-<!-- Kayıt Olma Ekranı -->
 <div id="signupSection" style="display:none;">
     <h2>Kayıt Ol</h2>
     <input type="email" id="signupEmail" placeholder="Email">
     <input type="password" id="signupPassword" placeholder="Şifre">
     <button onclick="signup()">Kayıt Ol</button>
-    <p>Hesabınız var mı? <a href="javascript:void(0);" onclick="showLogin()">Giriş yap</a></p>
+    
+    <p style="text-align: center; margin-top: 15px; margin-bottom: 20px; font-size: 15px;">
+        Hesabınız var mı? 
+        <a href="javascript:void(0);" onclick="showLogin()"
+           style="color: #03a9f4; text-decoration: none; transition: color 0.3s ease, text-decoration 0.3s ease;">
+           Giriş yap
+        </a>
+    </p>
+    
     <p id="signupMessage" style="color: #8bc34a; display: none;">Kayıt oluşturuldu, giriş yapın.</p>
 </div>
 
@@ -394,11 +458,14 @@ flex: 1; /* Tüm boşluğu kaplasın */
   
 <div class="dropdown">
         <button class="dropdown-btn">☰ Menü</button>
-        <div class="dropdown-content">
-            <a href="#" id="iletisimAc">📩 İletişim</a>
-            <a href="#" id="ayarlarAc">⚙️ Ayarlar</a>
-            <a href="#" id="yardimAc">❓ Yardım</a>
-        </div>
+     <div class="dropdown-content">
+    <a href="#" id="iletisimAc">📩 İletişim</a>
+    <a href="#" id="ayarlarAc">⚙️ Ayarlar</a>
+    <a href="#" id="yardimAc">❓ Yardım</a>
+	<button onclick="notlariIndir()">⬇️ Notları İndir</button>
+	 <a href="#" id="emailDegistirAc">📧 E-posta Değiştir</a>
+
+</div>
     </div>
 	
 </div>
@@ -440,11 +507,17 @@ flex: 1; /* Tüm boşluğu kaplasın */
 
 	
 
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+
+
+<script src="https://apis.google.com/js/api.js" async defer></script>
 
    <script>
    
@@ -463,51 +536,216 @@ flex: 1; /* Tüm boşluğu kaplasın */
         firebase.initializeApp(firebaseConfig);
 
         let currentEditKey = null;
+		
+		  // oturum zamanlayıcısı start
+		let sessionTimeout = null;
 
-        // Kayıt Olma Fonksiyonu
+function baslatOturumZamani() {
+   
+	
+	  // Mevcut zamanlayıcı varsa temizle
+    if (sessionTimeout) {
+        clearTimeout(sessionTimeout);
+        sessionTimeout = null; // ZAMANLAYICIYI BURADA NULL YAPARAK RESETLE
+    }
+	
+	
+    sessionTimeout = setTimeout(() => {
+        firebase.auth().signOut().then(() => {
+            Swal.fire({
+                icon: 'info',
+                title: 'Oturum Süresi Doldu',
+                text: 'Lütfen tekrar giriş yapın.',
+                confirmButtonText: 'Tamam'
+            }).then(() => {
+                document.getElementById('loginSection').style.display = "block";
+                document.getElementById('kayitListesi').style.display = "none";
+                document.getElementById('signupSection').style.display = "none";
+                document.getElementById('emailInput').value = "";
+                document.getElementById('passwordInput').value = "";
+            });
+        });
+    }, 30000); // 30 saniye
+}
+
+// oturum zamanlayıcısı finish
+
+
+// Kayıt Olma Fonksiyonu
         function signup() {
-            const email = document.getElementById('signupEmail').value;
-            const password = document.getElementById('signupPassword').value;
+            const email = document.getElementById('signupEmail').value.trim(); // .trim() ekledim
+            const password = document.getElementById('signupPassword').value.trim(); // .trim() ekledim
+
+            // Boş alan kontrolü
+            if (!email) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Kayıt Hatası',
+                    text: 'Lütfen e-posta adresinizi girin!'
+                });
+                return;
+            }
+            if (!password) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Kayıt Hatası',
+                    text: 'Lütfen bir şifre belirleyin!'
+                });
+                return;
+            }
+            if (password.length < 6) { // Firebase varsayılan şifre uzunluğu gereksinimi
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Kayıt Hatası',
+                    text: 'Şifreniz en az 6 karakter olmalıdır.'
+                });
+                return;
+            }
+
 
             firebase.auth().createUserWithEmailAndPassword(email, password)
                 .then((userCredential) => {
                     const user = userCredential.user;
                     console.log("Kayıt başarılı: ", user.uid);
-                    document.getElementById('signupMessage').style.display = "block"; // Kayıt sonrası mesajı göster
-                    setTimeout(() => {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Kayıt Başarılı',
+                        text: 'Hesabınız başarıyla oluşturuldu. Şimdi giriş yapabilirsiniz.'
+                    }).then(() => {
                         showLogin(); // Kayıt olduktan sonra giriş ekranını göster
-                    }, 2000); // 2 saniye sonra giriş ekranına geçiş
+                    });
                 })
                 .catch((error) => {
-                    const errorCode = error.code;
-                    const errorMessage = error.message;
-                    alert("Hata: " + errorMessage);
+                    // Hata nesnesini konsola yazdırarak detayları görün
+                    console.error("Firebase Kayıt Hatası Objesi:", error); 
+
+                    let errorMessage = "Bilinmeyen bir hata oluştu. Lütfen tekrar deneyin."; // Varsayılan hata mesajı
+
+                    if (error.code) { // Firebase hata kodu varsa
+                        switch (error.code) {
+                            case 'auth/email-already-in-use':
+                                errorMessage = 'Bu e-posta adresi zaten kullanımda.';
+                                break;
+                            case 'auth/invalid-email':
+                                errorMessage = 'Geçersiz e-posta adresi. Lütfen doğru bir e-posta formatı girin.';
+                                break;
+                            case 'auth/operation-not-allowed':
+                                errorMessage = 'E-posta/Şifre ile giriş devre dışı. Lütfen Firebase kimlik doğrulama ayarlarınızı kontrol edin.';
+                                break;
+                            case 'auth/weak-password':
+                                errorMessage = 'Şifre çok zayıf. Lütfen en az 6 karakterli güçlü bir şifre belirleyin.';
+                                break;
+                            case 'auth/network-request-failed':
+                                errorMessage = 'İnternet bağlantınızda bir sorun var. Lütfen bağlantınızı kontrol edin.';
+                                break;
+                            default:
+                                errorMessage = `Kayıt olurken bir hata oluştu: ${error.message}`;
+                                break;
+                        }
+                    } else if (error.message) {
+                        // Eğer error.code yoksa ama error.message varsa
+                        errorMessage = `Kayıt olurken bir hata oluştu: ${error.message}`;
+                    }
+
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Kayıt Hatası',
+                        text: errorMessage
+                    });
                 });
         }
 
-        // Giriş Yapma Fonksiyonu
+       
+       // Giriş Yapma Fonksiyonu
         function login() {
-            const email = document.getElementById('emailInput').value;
-            const password = document.getElementById('passwordInput').value;
+            const email = document.getElementById('emailInput').value.trim();
+            const password = document.getElementById('passwordInput').value.trim();
+            kullaniciSifresi = password;
+
+   
+	
+            // Boş alan kontrolü
+            if (!email) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Giriş Hatası',
+                    text: 'Lütfen e-posta adresinizi girin!'
+                });
+                return;
+            }
+            if (!password) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Giriş Hatası',
+                    text: 'Lütfen şifrenizi girin!'
+                });
+                return;
+            }
 
             firebase.auth().signInWithEmailAndPassword(email, password)
                 .then((userCredential) => {
                     const user = userCredential.user;
                     console.log("Giriş başarılı: ", user.uid);
-                    showContent(user.uid); // İçeriği göster
-					document.getElementById('hosgeldinYazi').textContent = `Hoş geldiniz, ${user.email}`;
+                    showContent(user.uid);
+                    document.getElementById('hosgeldinYazi').textContent = `Hoş geldiniz, ${user.email}`;
+                    baslatOturumZamani();
 
-                    document.getElementById('loginSection').style.display = "none"; // Giriş ekranını gizle
-                    document.getElementById('signupSection').style.display = "none"; // Kayıt ekranını gizle
+                    document.getElementById('loginSection').style.display = "none";
+                    document.getElementById('signupSection').style.display = "none";
                 })
                 .catch((error) => {
-                    const errorCode = error.code;
-                    const errorMessage = error.message;
-                    alert("Hata: " + errorMessage);
+                    // Hata nesnesini konsola yazdırarak detayları görün
+                    console.error("Firebase Giriş Hatası Objesi:", error); 
+
+                    let errorMessage = "Bilinmeyen bir hata oluştu. Lütfen tekrar deneyin."; // Varsayılan hata mesajı
+
+                    if (error.code) { // Firebase hata kodu varsa
+                        switch (error.code) {
+                            case 'auth/invalid-email':
+                                errorMessage = 'Geçersiz e-posta adresi. Lütfen doğru bir e-posta formatı girin.';
+                                break;
+                            case 'auth/user-disabled':
+                                errorMessage = 'Bu hesap devre dışı bırakılmış.';
+                                break;
+                            case 'auth/user-not-found':
+                            case 'auth/wrong-password': // Bu iki hata genellikle birleşir veya birbiri yerine kullanılır
+                            case 'auth/invalid-credential': // Modern Firebase SDK bu kodu kullanabilir
+                                errorMessage = 'E-posta veya şifre yanlış. Lütfen bilgilerinizi kontrol edip tekrar deneyin.';
+                                break;
+                            case 'auth/network-request-failed':
+                                errorMessage = 'İnternet bağlantınızda bir sorun var. Lütfen bağlantınızı kontrol edin.';
+                                break;
+                            default:
+                                errorMessage = `Giriş yapılırken bir hata oluştu: ${error.message}`;
+                                break;
+                        }
+                    } 
+                    
+                    // error.code ile yakalanamayan durumlar için error.message içeriğini kontrol edelim
+                    // Hata mesajı JSON formatında olabileceğinden, JSON'ı ayrıştırmaya çalışalım
+                    try {
+                        const parsedMessage = JSON.parse(error.message.substring(error.message.indexOf('{'))); // Hata mesajının JSON kısmını ayır
+                        if (parsedMessage.error && parsedMessage.error.message === "INVALID_LOGIN_CREDENTIALS") {
+                            errorMessage = 'E-posta veya şifre yanlış. Lütfen bilgilerinizi kontrol edip tekrar deneyin.';
+                        }
+                    } catch (e) {
+                        // Eğer error.message JSON değilse veya farklı bir formattaysa,
+                        // sadece includes() ile kontrol etmeye devam edebiliriz.
+                        if (error.message && error.message.includes("INVALID_LOGIN_CREDENTIALS")) {
+                            errorMessage = 'E-posta veya şifre yanlış. Lütfen bilgilerinizi kontrol edip tekrar deneyin.';
+                        } else if (error.message) {
+                            // Genel bir hata mesajı
+                            errorMessage = `Giriş yapılırken bir hata oluştu: ${error.message}`;
+                        }
+                    }
+
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Giriş Hatası',
+                        text: errorMessage
+                    });
                 });
         }
-
-	
 	
 
     // Kayıt Olma Fonksiyonu
@@ -548,44 +786,90 @@ flex: 1; /* Tüm boşluğu kaplasın */
     });
 }
 
-    // Kullanıcının kendi verilerini görüntüleme
+// Kullanıcının kendi verilerini görüntüleme
+// Kullanıcının kendi verilerini görüntüleme
 function showContent(uid) {
     // Önce mevcut dinleyiciyi kaldır (önemli!)
     firebase.database().ref('kayitlar/' + uid).off();
-    
+
     // Yeni dinleyici ekle
     firebase.database().ref('kayitlar/' + uid).on('value', (snapshot) => {
         const isimler = snapshot.val();
         const isimlerListesi = document.getElementById('isimlerListesi');
-        isimlerListesi.innerHTML = "";
-        
-        if (isimler) {
-            for (const key in isimler) {
-                if (isimler.hasOwnProperty(key)) {
-                    const li = document.createElement('li');
-                    li.classList.add('listeSatiri');
-                    li.innerHTML = `
-                        <div>
-                            <span>${isimler[key].ad || ''}</span><br>
-                            <span>${isimler[key].soyad || ''}</span><br>
-                            <span>${isimler[key].telefon || ''}</span>
-                        </div>
-                        <div class="butonGrubu">
-                            <button class="duzenleBtn" onclick="guncelle('${key}', '${isimler[key].ad || ''}', '${isimler[key].soyad || ''}', '${isimler[key].telefon || ''}')">Düzenle</button>
-                            <button class="silBtn" onclick="sil('${key}')">Sil</button>
-                        </div>
-                    `;
-                    isimlerListesi.appendChild(li);
+        isimlerListesi.innerHTML = ""; // Listeyi temizle
+
+        console.log("Firebase'den gelen isimler:", isimler);
+
+        function linkeDonustur(metin) {
+            if (!metin) return '';
+            const regex = /^\*\*(.*?)\*\*$/;
+            const match = metin.match(regex);
+            if (match) {
+                let hedef = match[1].trim();
+                const urlRegex = /^(https?:\/\/|www\.)[^\s]+$/i;
+                if (urlRegex.test(hedef)) {
+                    if (hedef.startsWith('www.')) {
+                        hedef = 'https://' + hedef;
+                    }
+                    return `<a href="${hedef}" target="_blank" style="color:white; text-decoration: underline; text-decoration-color:#03a9f4; font-weight:bold;">${match[1]}</a>`;
+                } else {
+                    return match[1];
                 }
             }
+            return metin;
         }
+
+        if (isimler) {
+            // **BURADA SİRULAMA MANTIĞI DEĞİŞTİ**
+            const kayitlarDizisi = [];
+            for (const key in isimler) {
+                if (isimler.hasOwnProperty(key)) {
+                    kayitlarDizisi.push({
+                        key: key,
+                        ...isimler[key] // Tüm kayıt verilerini al
+                    });
+                }
+            }
+
+            // `tarih` alanına göre azalan sırada sırala (en yeni en başta)
+            kayitlarDizisi.sort((a, b) => {
+                // Tarihler string olarak ISO formatında ise doğrudan karşılaştırılabilir
+                // Eğer tarih yoksa (eski kayıtlar için), bunları listenin sonuna atabiliriz.
+                const dateA = a.tarih ? new Date(a.tarih).getTime() : 0;
+                const dateB = b.tarih ? new Date(b.tarih).getTime() : 0;
+                return dateB - dateA; // Azalan sıra (en yeni en başta)
+            });
+
+            // Sıralanmış dizi üzerinde döngü yap ve listeye ekle
+            for (const kayitObj of kayitlarDizisi) {
+                const key = kayitObj.key;
+                const kayit = kayitObj; // Zaten kayıt objesinin kendisi
+
+                const li = document.createElement('li');
+                li.classList.add('listeSatiri');
+                li.id = key; // Kaydırma için ID ataması hala önemli!
+
+              // BURADA DEĞİŞİKLİK YAPILIYOR: kayitZamani div'i eklendi
+                li.innerHTML = `
+                    <div class="kayitZamani">${new Date(kayit.tarih).toLocaleString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</div>
+                    <div>
+                        <span>${linkeDonustur(kayit.ad)}</span><br>
+                        <span>${linkeDonustur(kayit.soyad)}</span><br>
+                        <span>${linkeDonustur(kayit.telefon)}</span>
+                    </div>
+                    <div class="butonGrubu">
+                        <button class="duzenleBtn" onclick="guncelle('${key}', '${kayit.ad || ''}', '${kayit.soyad || ''}', '${kayit.telefon || ''}')">Düzenle</button>
+                        <button class="silBtn" onclick="sil('${key}')">Sil</button>
+                    </div>
+                `;
+                isimlerListesi.appendChild(li); // appendChild kullanıyoruz çünkü zaten sıralanmış dizi üzerinde dönüyoruz
+            }
+            // **SİRULAMA MANTIĞI BİTTİ**
+        }
+        document.getElementById('kayitListesi').style.display = "block";
+        document.getElementById("kelimeBul").focus();
     });
-    
-    document.getElementById('kayitListesi').style.display = "block";
-	 // 🔽 Bu satır eklendi: giriş yapılınca arama kutusu odaklansın
-    document.getElementById("kelimeBul").focus();
 }
-		
    
 
     // Veriyi silme
@@ -624,29 +908,33 @@ function showContent(uid) {
 }
 
 
-    // Veriyi güncelleme
-    function guncelle(key, ad, soyad, telefon) {
-        currentEditKey = key;
-        document.getElementById('isimInput').value = ad;
-        document.getElementById('soyadInput').value = soyad;
-        document.getElementById('telefonInput').value = telefon;
-        document.getElementById('guncelleBtn').style.display = "block";
-		 document.getElementById('vazgecBtn').style.display = "inline-block";
-		document.getElementById('kaydetBtn').style.display = "none"; // KAYDET butonunu gizle
-        document.getElementById('guncelleBtn').onclick = () => {
-            isimGuncelle(key);
-        };
-		
-    }
 
-    // Veriyi güncelleme
-    function isimGuncelle(key) {
-        const user = firebase.auth().currentUser;
-        const yeniAd = document.getElementById('isimInput').value.trim();
-        const yeniSoyad = document.getElementById('soyadInput').value.trim();
-        const yeniTelefon = document.getElementById('telefonInput').value.trim();
+// Veriyi güncelleme (Düzenle butonu tıklandığında)
+function guncelle(key, ad, soyad, telefon) {
+    currentEditKey = key;
+    document.getElementById('isimInput').value = ad;
+    document.getElementById('soyadInput').value = soyad;
+    document.getElementById('telefonInput').value = telefon;
+    document.getElementById('guncelleBtn').style.display = "block";
+    document.getElementById('vazgecBtn').style.display = "inline-block";
+    document.getElementById('kaydetBtn').style.display = "none"; // KAYDET butonunu gizle
+    document.getElementById('guncelleBtn').onclick = () => {
+        isimGuncelle(key);
+    };
 
-       if (yeniAd === "" && yeniSoyad === "" && yeniTelefon === "") {
+    // Sayfayı input alanlarının olduğu yere kaydır
+    document.getElementById('isimInput').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+
+// Veriyi güncelleme
+function isimGuncelle(key) {
+    const user = firebase.auth().currentUser;
+    const yeniAd = document.getElementById('isimInput').value.trim();
+    const yeniSoyad = document.getElementById('soyadInput').value.trim();
+    const yeniTelefon = document.getElementById('telefonInput').value.trim();
+
+    if (yeniAd === "" && yeniSoyad === "" && yeniTelefon === "") {
         Swal.fire({
             text: 'Lütfen en az bir alanı doldurun!',
             confirmButtonText: 'Tamam'
@@ -654,34 +942,38 @@ function showContent(uid) {
         return;
     }
 
-        firebase.database().ref('kayitlar/' + user.uid + '/' + key).update({
-            ad: yeniAd,
-            soyad: yeniSoyad,
-            telefon: yeniTelefon
-        }).then(() => {
-            document.getElementById('guncelleBtn').style.display = "none";
-			document.getElementById('vazgecBtn').style.display = "none";
-			document.getElementById('kaydetBtn').style.display = "block"; // KAYDET butonunu geri göster
-            document.getElementById('isimInput').value = "";
-            document.getElementById('soyadInput').value = "";
-            document.getElementById('telefonInput').value = "";
-            currentEditKey = null;
-			// Başarı uyarısı
+    // BURADA DEĞİŞİKLİK YAPILDI: `tarih` alanını da güncelliyoruz
+    firebase.database().ref('kayitlar/' + user.uid + '/' + key).update({
+        ad: yeniAd,
+        soyad: yeniSoyad,
+        telefon: yeniTelefon,
+        tarih: new Date().toISOString() // Güncelleme anındaki yeni tarih
+    }).then(() => {
+        // Formu ve butonları temizle/resetle
+        document.getElementById('guncelleBtn').style.display = "none";
+        document.getElementById('vazgecBtn').style.display = "none";
+        document.getElementById('kaydetBtn').style.display = "block";
+        document.getElementById('isimInput').value = "";
+        document.getElementById('soyadInput').value = "";
+        document.getElementById('telefonInput').value = "";
+        currentEditKey = null;
+
         Swal.fire({
             icon: 'success',
             title: 'Güncellendi!',
             confirmButtonText: 'Tamam'
         });
+        // Kaydırma işlemi burada artık doğrudan yapılmayacak,
+        // çünkü showContent listeyi yeni sıraya göre çizecek.
     }).catch((error) => {
-        // Hata durumunda uyarı
         Swal.fire({
             icon: 'error',
             title: 'Hata!',
             confirmButtonText: 'Tamam'
         });
         console.error(error);
-        });
-    }
+    });
+}
 	
 	//güncelleme esnasında vazgeç butonu dinleme
 document.getElementById('vazgecBtn').addEventListener('click', () => {
@@ -781,7 +1073,8 @@ document.getElementById('vazgecBtn').addEventListener('click', () => {
 
 
  
-
+document.addEventListener('click', baslatOturumZamani);
+document.addEventListener('keydown', baslatOturumZamani);
 
 
   document.addEventListener("DOMContentLoaded", function () {
@@ -1010,7 +1303,392 @@ document.getElementById('yardimAc').addEventListener('click', function(e) {
 
 
 
+
+
+
+
+
+
+
+function notlariIndir() {
+    Swal.fire({
+        title: 'Şifre Gerekli', // Başlık: Şifre gerekli
+        input: 'password',     // Giriş tipi: Şifre
+        inputLabel: 'İndirme şifrenizi girin', // Giriş alanı etiketi
+        inputPlaceholder: '•••••••',          // Yer tutucu metin
+        showCancelButton: true,              // İptal butonu göster
+        confirmButtonText: 'İndir',          // Onay butonu metni
+        cancelButtonText: 'Vazgeç',          // İptal butonu metni
+        inputValidator: (value) => {         // Giriş doğrulayıcı
+            if (!value) {
+                return 'Şifre boş bırakılamaz!'; // Şifre boşsa uyarı ver
+            }
+        }
+    }).then((result) => {
+        // Kullanıcı "İndir" butonuna bastıysa ve bir değer girdiyse
+        if (result.isConfirmed) {
+            // **ÖNEMLİ:** Buradaki "kullaniciSifresi" değişkenini kendi uygulamanızdaki
+            // doğru şifre ile değiştirmelisiniz. Bu şifreyi başka bir yerden (örn: bir sabitten) almanız en iyisidir.
+            // Örneğin: const kullaniciSifresi = "sizinGercekSifreniz";
+            // BU SATIRI KENDİ ŞİFRENİZLE DEĞİŞTİRİN!
+
+            if (result.value === kullaniciSifresi) { // Girilen şifre doğru mu kontrol et
+                const user = firebase.auth().currentUser; // Giriş yapmış kullanıcıyı al
+
+                if (!user) { // Kullanıcı giriş yapmamışsa
+                    Swal.fire({
+                        text: 'Lütfen önce giriş yapın!',
+                        confirmButtonText: 'Tamam'
+                    });
+                    return; // Fonksiyondan çık
+                }
+
+                // Kullanıcı giriş yapmış ve şifre doğruysa:
+                // Hem notları hem de kayıtları aynı anda Firebase'den çek
+                Promise.all([
+                    firebase.database().ref('notlar/' + user.uid + '/not').once('value'),
+                    firebase.database().ref('kayitlar/' + user.uid).once('value')
+                ]).then(([notSnapshot, kayitSnapshot]) => {
+                    const notData = notSnapshot.val();   // Not verilerini al
+                    const kayitlar = kayitSnapshot.val(); // Kayıt verilerini al
+
+                    // Dosya içeriğini oluşturmaya başla
+                    let icerik = `Kişisel Not Defteri - ${new Date().toLocaleDateString()}\n\n`;
+
+                    // Notları içeriğe ekle
+                    if (notData && notData.metin) {
+                        icerik += `NOTLARIM:\n--------------------------------\n` +
+                            `${notData.metin}\n` +
+                            `--------------------------------\n\n`;
+                    }
+
+                    // Kayıtları içeriğe ekle
+                    if (kayitlar) {
+                        icerik += `KAYITLARIM:\n--------------------------------\n`;
+
+                        for (const key in kayitlar) {
+                            if (kayitlar.hasOwnProperty(key)) {
+                                const kayit = kayitlar[key];
+                                icerik += `Ad: ${kayit.ad || '-'}\n` +
+                                    `Soyad: ${kayit.soyad || '-'}\n` +
+                                    `Telefon: ${kayit.telefon || '-'}\n` +
+                                    `Tarih: ${new Date(kayit.tarih).toLocaleString()}\n` +
+                                    `--------------------------------\n`;
+                            }
+                        }
+                    }
+
+                    // Eğer hiç not veya kayıt yoksa
+                    if ((!notData || !notData.metin) && !kayitlar) {
+                        Swal.fire({
+                            text: 'İndirilecek veri bulunamadı!',
+                            icon: 'info',
+                            confirmButtonText: 'Tamam'
+                        });
+                        return; // Fonksiyondan çık
+                    }
+
+                    // Oluşturulan içeriği bir metin dosyasına (Blob) dönüştür
+                    const blob = new Blob([icerik], { type: 'text/plain;charset=utf-8' });
+                    const url = URL.createObjectURL(blob); // Dosya için geçici bir URL oluştur
+
+                    // Gizli bir indirme linki oluştur ve otomatik olarak tıkla
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `not_defterim_${new Date().toISOString().slice(0, 10)}.txt`; // Dosya adı
+                    document.body.appendChild(a); // Linki sayfaya ekle
+                    a.click(); // Linke tıkla (indirmeyi başlat)
+
+                    // Temizlik: Geçici linki ve URL'yi kaldır
+                    setTimeout(() => {
+                        document.body.removeChild(a);
+                        window.URL.revokeObjectURL(url);
+                    }, 100);
+
+                    // Başarılı indirme mesajı göster
+                    Swal.fire({
+                        text: 'Not defteriniz indiriliyor...',
+                        icon: 'success',
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+                }).catch(error => { // Veri çekme veya oluşturma sırasında hata olursa
+                    console.error("Veri indirilirken hata:", error);
+                    Swal.fire({
+                        text: 'Veri indirilirken bir hata oluştu!',
+                        icon: 'error',
+                        confirmButtonText: 'Tamam'
+                    });
+                });
+            } else { // Şifre yanlışsa
+                Swal.fire('Hatalı Şifre', 'Oturum Kapatıldı...', 'error');
+				logout();
+            }
+        }
+    });
+}
+let kullaniciSifresi = ""; // global
+
+// Şifre Sıfırlama Fonksiyonu
+function resetPassword() {
+    Swal.fire({
+        title: 'Şifre Sıfırlama',
+        input: 'email',
+        inputLabel: 'Şifresini sıfırlamak istediğiniz e-posta adresinizi girin:',
+        inputPlaceholder: 'E-posta adresiniz',
+        showCancelButton: true,
+        confirmButtonText: 'Şifre Sıfırla',
+        cancelButtonText: 'İptal',
+        inputValidator: (value) => {
+            if (!value) {
+                return 'E-posta adresi boş bırakılamaz!';
+            }
+            // Basit bir e-posta format kontrolü
+            if (!/\S+@\S+\.\S+/.test(value)) {
+                return 'Lütfen geçerli bir e-posta adresi girin!';
+            }
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            const email = result.value;
+
+            firebase.auth().sendPasswordResetEmail(email)
+                .then(() => {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Şifre Sıfırlama Bağlantısı Gönderildi',
+                        text: 'Şifre sıfırlama bağlantısı e-posta adresinize gönderildi. Lütfen gelen kutunuzu kontrol edin.'
+                    });
+                })
+                .catch((error) => {
+                    let errorMessage = "Bilinmeyen bir hata oluştu. Lütfen tekrar deneyin.";
+
+                    switch (error.code) {
+                        case 'auth/invalid-email':
+                            errorMessage = 'Geçersiz e-posta adresi. Lütfen doğru bir e-posta formatı girin.';
+                            break;
+                        case 'auth/user-not-found':
+                            errorMessage = 'Bu e-posta adresiyle kayıtlı bir kullanıcı bulunamadı.';
+                            break;
+                        case 'auth/network-request-failed':
+                            errorMessage = 'İnternet bağlantınızda bir sorun var. Lütfen bağlantınızı kontrol edin.';
+                            break;
+                        default:
+                            errorMessage = `Şifre sıfırlanırken bir hata oluştu: ${error.message}`;
+                            break;
+                    }
+
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Hata',
+                        text: errorMessage
+                    });
+                    console.error("Şifre Sıfırlama Hatası:", error);
+                });
+        }
+    });
+}
+
+
+// E-posta Değiştirme Fonksiyonu
+// "E-posta Değiştir" linkine tıklama olayını dinle
+document.getElementById('emailDegistirAc').addEventListener('click', function(e) {
+  e.preventDefault(); // Varsayılan link davranışını engelle
+  document.querySelector('.dropdown-content').classList.remove('show'); // Açık dropdown'ı kapat
+  degistirEmail(); // Fonksiyonu çağır
+});
+
+
+// E-posta Değiştirme Fonksiyonu
+function degistirEmail() {
+    const user = firebase.auth().currentUser;
+
+    if (!user) {
+        Swal.fire({
+            text: 'Lütfen önce giriş yapın!',
+            confirmButtonText: 'Tamam'
+        });
+        return;
+    }
+
+    Swal.fire({
+        title: 'E-posta Adresini Değiştir',
+        html:
+            `<input id="swal-old-email" class="swal2-input" placeholder="Mevcut E-posta Adresiniz" type="email" value="${user.email || ''}" disabled>` +
+            '<input id="swal-new-email" class="swal2-input" placeholder="Yeni E-posta Adresiniz" type="email">' +
+            '<input id="swal-password" class="swal2-input" placeholder="Şifreniz" type="password">',
+        focusConfirm: false,
+        showCancelButton: true,
+        confirmButtonText: 'Değiştir',
+        cancelButtonText: 'İptal',
+        preConfirm: () => {
+            const newEmail = document.getElementById('swal-new-email').value.trim();
+            const password = document.getElementById('swal-password').value.trim();
+
+            if (!newEmail || !password) {
+                Swal.showValidationMessage('Tüm alanları doldurmanız gerekmektedir.');
+                return false;
+            }
+            if (!/\S+@\S+\.\S+/.test(newEmail)) {
+                Swal.showValidationMessage('Lütfen geçerli bir yeni e-posta adresi girin.');
+                return false;
+            }
+            if (newEmail === user.email) {
+                 Swal.showValidationMessage('Yeni e-posta adresiniz mevcut e-posta adresinizle aynı olamaz.');
+                 return false;
+            }
+
+            return { newEmail: newEmail, password: password };
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            const { newEmail, password } = result.value;
+
+            // Kullanıcının kimliğini tekrar doğrula
+            const credential = firebase.auth.EmailAuthProvider.credential(user.email, password);
+
+            user.reauthenticateWithCredential(credential)
+                .then(() => {
+                    // Kimlik doğrulandı, şimdi e-postayı güncelle
+                    user.updateEmail(newEmail)
+                        .then(() => {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'E-posta Değiştirildi!',
+                                html: `E-posta adresiniz başarıyla <strong>${newEmail}</strong> olarak ayarlandı. <br> Yeni e-postanıza gönderilen doğrulama linkine tıklayarak e-posta adresinizi doğrulamanız gerekmektedir.`,
+                                confirmButtonText: 'Tamam'
+                            });
+                            // Hoşgeldin yazısını da güncelle (geçici olarak, doğrulama sonrası kalıcı olacak)
+                            document.getElementById('hosgeldinYazi').textContent = `Hoş geldiniz, ${newEmail}`;
+                        })
+                        .catch((error) => {
+                            let errorMessage = "E-posta güncellenirken bir hata oluştu. Lütfen tekrar deneyin.";
+                            console.error("E-posta Güncelleme Hatası:", error);
+
+                            if (error.code) {
+                                switch (error.code) {
+                                    case 'auth/invalid-email':
+                                        errorMessage = 'Geçersiz yeni e-posta adresi formatı.';
+                                        break;
+                                    case 'auth/email-already-in-use':
+                                        errorMessage = 'Bu yeni e-posta adresi zaten başka bir hesap tarafından kullanılıyor.';
+                                        break;
+                                    case 'auth/requires-recent-login':
+                                        errorMessage = 'Güvenlik nedeniyle, bu işlem için yakın zamanda tekrar giriş yapmanız gerekmektedir.';
+                                        break;
+                                    case 'auth/network-request-failed':
+                                        errorMessage = 'İnternet bağlantınızda bir sorun var. Lütfen bağlantınızı kontrol edin.';
+                                        break;
+                                    default:
+                                        // Hata mesajı içinde "verify the new email" veya "change email" ifadelerini arayalım
+                                        // JSON ayrıştırma denemesi
+                                        try {
+                                            const parsedMessage = JSON.parse(error.message.substring(error.message.indexOf('{')));
+                                            if (parsedMessage.error && parsedMessage.error.message && parsedMessage.error.message.includes("verify the new email")) {
+                                                errorMessage = 'Yeni e-posta adresinizi değiştirmeden önce doğrulamanız gerekmektedir. Lütfen yeni e-postanıza gönderilen doğrulama linkine tıklayın.';
+                                            } else {
+                                                errorMessage = `E-posta güncellenirken bir hata oluştu: ${error.message}`;
+                                            }
+                                        } catch (e) {
+                                            // Eğer error.message JSON değilse, sadece includes() ile kontrol ederiz
+                                            if (error.message && error.message.includes("verify the new email")) {
+                                                errorMessage = 'Yeni e-posta adresinizi değiştirmeden önce doğrulamanız gerekmektedir. Lütfen yeni e-postanıza gönderilen doğrulama linkine tıklayın.';
+                                            } else {
+                                                errorMessage = `E-posta güncellenirken bir hata oluştu: ${error.message}`;
+                                            }
+                                        }
+                                        break;
+                                }
+                            } else if (error.message && error.message.includes("verify the new email")) {
+                                errorMessage = 'Yeni e-posta adresinizi değiştirmeden önce doğrulamanız gerekmektedir. Lütfen yeni e-postanıza gönderilen doğrulama linkine tıklayın.';
+                            } else {
+                                errorMessage = `E-posta güncellenirken bir hata oluştu: ${error.message}`;
+                            }
+
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Hata',
+                                text: errorMessage
+                            });
+                        });
+                })
+                .catch((error) => {
+                    let errorMessage = "Mevcut şifreniz yanlış. Lütfen tekrar deneyin.";
+                    console.error("Kimlik Doğrulama Hatası:", error);
+
+                    if (error.code) {
+                        switch (error.code) {
+                            case 'auth/wrong-password':
+                            case 'auth/invalid-credential':
+                                errorMessage = 'Mevcut şifreniz yanlış. Lütfen bilgilerinizi kontrol edip tekrar deneyin.';
+                                break;
+                            case 'auth/user-not-found':
+                                errorMessage = 'Kullanıcı bulunamadı. Lütfen tekrar giriş yapın.';
+                                break;
+                            case 'auth/invalid-email':
+                                errorMessage = 'E-posta formatı hatalı.';
+                                break;
+                            case 'auth/requires-recent-login':
+                                errorMessage = 'Güvenlik nedeniyle, bu işlem için yakın zamanda tekrar giriş yapmanız gerekmektedir.';
+                                break;
+                            case 'auth/network-request-failed':
+                                errorMessage = 'İnternet bağlantınızda bir sorun var. Lütfen bağlantınızı kontrol edin.';
+                                break;
+                            default:
+                                // Genel hata mesajı için JSON ayrıştırma denemesi
+                                try {
+                                    const parsedMessage = JSON.parse(error.message.substring(error.message.indexOf('{')));
+                                    if (parsedMessage.error && parsedMessage.error.message === "INVALID_LOGIN_CREDENTIALS") {
+                                        errorMessage = 'Mevcut şifreniz yanlış. Lütfen bilgilerinizi kontrol edip tekrar deneyin.';
+                                    } else {
+                                        errorMessage = `Kimlik doğrulama sırasında bir hata oluştu: ${error.message}`;
+                                    }
+                                } catch (e) {
+                                    if (error.message && error.message.includes("INVALID_LOGIN_CREDENTIALS")) {
+                                        errorMessage = 'Mevcut şifreniz yanlış. Lütfen bilgilerinizi kontrol edip tekrar deneyin.';
+                                    } else {
+                                        errorMessage = `Kimlik doğrulama sırasında bir hata oluştu: ${error.message}`;
+                                    }
+                                }
+                                break;
+                        }
+                    } else if (error.message) {
+                        // Eğer error.code yoksa ama error.message var ise genel hata mesajı
+                        try { // error.message'ın bir JSON olduğunu varsayıp ayrıştırmayı deneriz
+                            const parsedMessage = JSON.parse(error.message.substring(error.message.indexOf('{')));
+                            if (parsedMessage.error && parsedMessage.error.message === "INVALID_LOGIN_CREDENTIALS") {
+                                errorMessage = 'Mevcut şifreniz yanlış. Lütfen bilgilerinizi kontrol edip tekrar deneyin.';
+                            } else {
+                                errorMessage = `Kimlik doğrulama sırasında bir hata oluştu: ${error.message}`;
+                            }
+                        } catch (e) { // Eğer error.message JSON değilse, sadece includes ile kontrol ederiz
+                            if (error.message.includes("INVALID_LOGIN_CREDENTIALS")) {
+                                errorMessage = 'Mevcut şifreniz yanlış. Lütfen bilgilerinizi kontrol edip tekrar deneyin.';
+                            } else {
+                                errorMessage = `Kimlik doğrulama sırasında bir hata oluştu: ${error.message}`;
+                            }
+                        }
+                    }
+
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Kimlik Doğrulama Hatası',
+                        text: errorMessage
+                    });
+                });
+        }
+    });
+}
 </script>
 
    </body>
 </html>
+
+
+
+
+
+
+
+
+
