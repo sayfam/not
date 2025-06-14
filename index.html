@@ -386,6 +386,80 @@ flex: 1; /* Tüm boşluğu kaplasın */
   height: 100px;
   resize: vertical;
 }
+/* Password göster/gizle ikonları için */
+.password-container {
+    position: relative;
+    width: 100%; /* Input ile aynı genişlikte olması için */
+    margin: 8px 0; /* Input ile aynı margin */
+}
+
+.password-container input {
+    width: 100%;
+    padding-right: 40px; /* Göz ikonu için sağdan boşluk */
+    /* Input'un diğer mevcut stilleri */
+}
+
+.toggle-password {
+    position: absolute;
+    right: 10px; /* Sağdan boşluk */
+    top: 50%; /* Dikeyde ortaya */
+    transform: translateY(-50%); /* Kendi yüksekliğinin yarısı kadar yukarı kaydırarak tam ortaya */
+    cursor: pointer;
+    color: #999; /* İkon rengi */
+    font-size: 20px; /* İkon boyutu */
+    user-select: none; /* Metin seçimi engeller */
+}
+
+.toggle-password:hover {
+    color: #fff; /* Üzerine gelince beyaz */
+}
+
+
+
+/* FOOTER STİLLERİ */
+/* FOOTER STİLLERİ - Temaya Uygun Koyu Renkler */
+.app-footer {
+    text-align: center;
+    padding: 10px 0; /* Üstten ve alttan daha az boşluk */
+    background-color: ##080011; /* Koyu mor tonu - Tema rengine daha yakın */
+    color: #e0e0e0; /* Metin rengi açık olsun */
+    border-top: 1px solid #550099; /* Daha belirgin ama uyumlu bir kenarlık */
+    font-size: 0.85em; /* Metin boyutunu biraz küçültme */
+    width: 100%;
+    box-sizing: border-box;
+    margin-top: auto; /* İçeriğin az olduğu durumlarda footer'ı alta iter */
+    position: relative; /* Z-index için */
+    z-index: 10; /* Diğer öğelerin altında kalmaması için */
+}
+
+.app-footer .footer-content {
+    max-width: 1200px; /* Genişliği artırın veya temanıza göre ayarlayın */
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.app-footer p {
+    margin: 3px 0; /* Paragraflar arası boşluğu azaltma */
+}
+
+.app-footer .footer-links a {
+    text-decoration: none;
+    color: #99ccff; /* Bağlantı rengi - Koyu zeminde okunabilir açık mavi */
+    margin: 0 8px;
+    transition: color 0.3s ease;
+}
+
+.app-footer .footer-links a:hover {
+    color: #cceeff; /* Fare üzerine gelindiğinde daha açık bir renk */
+}
+
+/* GİRİŞ EKRANI AKTİFKEN FOOTER'I GİZLE */
+body.login-active .app-footer {
+    display: none;
+}
     </style>
 </head>
 <body>
@@ -393,7 +467,10 @@ flex: 1; /* Tüm boşluğu kaplasın */
 <div id="loginSection">
     <h2>Giriş Yap</h2>
     <input type="email" id="emailInput" placeholder="Email">
+	<div class="password-container">
     <input type="password" id="passwordInput" placeholder="Şifre">
+	<span class="toggle-password" onclick="togglePasswordVisibility('passwordInput', this)">🐵</span>
+	</div>
     <button onclick="login()">Giriş Yap</button>
     
     <p style="text-align: center; margin-top: 15px; margin-bottom: 5px; font-size: 15px;">
@@ -415,7 +492,10 @@ flex: 1; /* Tüm boşluğu kaplasın */
 <div id="signupSection" style="display:none;">
     <h2>Kayıt Ol</h2>
     <input type="email" id="signupEmail" placeholder="Email">
+	<div class="password-container">
     <input type="password" id="signupPassword" placeholder="Şifre">
+	<span class="toggle-password" onclick="togglePasswordVisibility('signupPassword', this)">🐵️</span>
+	</div>
     <button onclick="signup()">Kayıt Ol</button>
     
     <p style="text-align: center; margin-top: 15px; margin-bottom: 20px; font-size: 15px;">
@@ -462,8 +542,7 @@ flex: 1; /* Tüm boşluğu kaplasın */
     <a href="#" id="iletisimAc">📩 İletişim</a>
     <a href="#" id="ayarlarAc">⚙️ Ayarlar</a>
     <a href="#" id="yardimAc">❓ Yardım</a>
-	<button onclick="notlariIndir()">⬇️ Notları İndir</button>
-	 <a href="#" id="emailDegistirAc">📧 E-posta Değiştir</a>
+
 
 </div>
     </div>
@@ -505,7 +584,7 @@ flex: 1; /* Tüm boşluğu kaplasın */
 
 
 
-	
+	   
 
     
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -563,6 +642,10 @@ function baslatOturumZamani() {
                 document.getElementById('signupSection').style.display = "none";
                 document.getElementById('emailInput').value = "";
                 document.getElementById('passwordInput').value = "";
+				
+				 // *** BURAYA EKLEYECEĞİZ ***
+                // loginSection gösterildiğinde altbilgiyi gizle
+                toggleLoginScreen(true); // Altbilgiyi gizle
             });
         });
     }, 30000); // 30 saniye
@@ -607,12 +690,26 @@ function baslatOturumZamani() {
                 .then((userCredential) => {
                     const user = userCredential.user;
                     console.log("Kayıt başarılı: ", user.uid);
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Kayıt Başarılı',
-                        text: 'Hesabınız başarıyla oluşturuldu. Şimdi giriş yapabilirsiniz.'
-                    }).then(() => {
-                        showLogin(); // Kayıt olduktan sonra giriş ekranını göster
+                  
+                    // E-posta doğrulama bağlantısını gönder
+                    user.sendEmailVerification().then(() => {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Kayıt Başarılı!',
+                            html: 'Hesabınız oluşturuldu. Lütfen giriş yapmadan önce <strong>e-posta adresinize gönderilen doğrulama bağlantısına tıklayın.</strong>',
+                            confirmButtonText: 'Tamam'
+                        }).then(() => {
+                            showLogin(); // Kullanıcıya giriş ekranını göster
+                        });
+                    }).catch((error) => {
+                        console.error("E-posta doğrulama gönderilemedi:", error);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Kayıt Başarılı (Doğrulama Hatası)',
+                            text: 'Hesabınız oluşturuldu ancak doğrulama e-postası gönderilemedi. Lütfen daha sonra tekrar deneyin veya bizimle iletişime geçin.'
+                        }).then(() => {
+                            showLogin();
+                        });
                     });
                 })
                 .catch((error) => {
@@ -682,16 +779,29 @@ function baslatOturumZamani() {
                 return;
             }
 
-            firebase.auth().signInWithEmailAndPassword(email, password)
+              firebase.auth().signInWithEmailAndPassword(email, password)
                 .then((userCredential) => {
                     const user = userCredential.user;
                     console.log("Giriş başarılı: ", user.uid);
-                    showContent(user.uid);
-                    document.getElementById('hosgeldinYazi').textContent = `Hoş geldiniz, ${user.email}`;
-                    baslatOturumZamani();
 
-                    document.getElementById('loginSection').style.display = "none";
-                    document.getElementById('signupSection').style.display = "none";
+                    // E-posta adresinin doğrulanıp doğrulanmadığını kontrol et
+                    if (user.emailVerified) {
+                        showContent(user.uid);
+                        document.getElementById('hosgeldinYazi').textContent = `Hoş geldiniz, ${user.email}`;
+                        baslatOturumZamani();
+                        document.getElementById('loginSection').style.display = "none";
+                        document.getElementById('signupSection').style.display = "none";
+                    } else {
+                        // E-posta doğrulanmamışsa kullanıcıyı uyar ve çıkış yap
+                        firebase.auth().signOut().then(() => {
+                            Swal.fire({
+                                icon: 'warning',
+                                title: 'Giriş Başarısız',
+                                html: 'E-posta adresiniz doğrulanmamış. Lütfen giriş yapmadan önce <strong>e-postanıza gönderilen doğrulama bağlantısına tıklayın.</strong> <br><br> Doğrulama e-postası almadıysanız, tekrar göndermek için bizimle iletişime geçin.',
+                                confirmButtonText: 'Tamam'
+                            });
+                        });
+                    }
                 })
                 .catch((error) => {
                     // Hata nesnesini konsola yazdırarak detayları görün
@@ -1280,24 +1390,99 @@ document.getElementById('iletisimAc').addEventListener('click', function(e) {
 
 
 
-// Ayarlar ve Yardım için boş fonksiyonlar
+// Ayarlar ve Yardım için boş fonksiyonlar (ŞİMDİ GÜNCELLENECEK)
 document.getElementById('ayarlarAc').addEventListener('click', function(e) {
   e.preventDefault();
-  document.querySelector('.dropdown-content').classList.remove('show');
-  Swal.fire({
-    title: 'Ayarlar',
-    text: 'Ayarlar paneli yakında eklenecek',
-    icon: 'info'
-  });
-});
+  document.querySelector('.dropdown-content').classList.remove('show'); // Açık dropdown'ı kapat
 
-document.getElementById('yardimAc').addEventListener('click', function(e) {
-  e.preventDefault();
-  document.querySelector('.dropdown-content').classList.remove('show');
   Swal.fire({
-    title: 'Yardım',
-    text: 'İletişim bölümünden bize ulaşın',
-    icon: 'question'
+    title: '⚙️ Ayarlar',
+    html: `
+      <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 20px;">
+        <button id="ayarlarEmailDegistir" class="swal2-styled">📧 E-posta Değiştir</button>
+        <button id="ayarlarNotlariIndir" class="swal2-styled">⬇️ Notları İndir</button>
+		 <button id="ayarlarNotlariYukle" class="swal2-styled">⬆️ Notları Yükle/Geri Yükle</button>
+		<button id="ayarlarSifreDegistir" class="swal2-styled">🔒 Şifre Değiştir</button>
+        <button id="ayarlarHesapSil" class="swal2-styled" style="background-color: #e53935;">🗑️ Hesabı Sil</button> </div>
+    `,
+    showConfirmButton: false, // Varsayılan "Tamam" butonunu gizle
+    showCloseButton: true, // Sağ üst köşeye kapatma butonu ekle
+    customClass: {
+        container: 'swal2-container-ayarlar' // Özel CSS sınıfı, eğer popup'ı daha da özelleştirmek isterseniz
+    },
+    didOpen: () => {
+	
+      // Pop-up açıldıktan sonra butonlara olay dinleyicisi ekle
+	  
+	  document.getElementById('ayarlarSifreDegistir').addEventListener('click', () => { // YENİ: Şifre Değiştir dinleyicisi
+        Swal.close(); 
+        degistirSifre(); // şifre değiştirme fonksiyonu çağır
+      });
+
+
+      document.getElementById('ayarlarEmailDegistir').addEventListener('click', () => {
+        Swal.close(); // SweetAlert'i kapat
+        degistirEmail(); // E-posta değiştirme fonksiyonunu çağır
+      });
+	  
+      document.getElementById('ayarlarNotlariIndir').addEventListener('click', () => {
+        Swal.close(); // SweetAlert'i kapat
+        notlariIndir(); // Notları indirme fonksiyonunu çağır
+      });
+	  
+	  
+	     // *** BURAYA YENİ EKLENECEK KOD ***
+            document.getElementById('ayarlarNotlariYukle').addEventListener('click', () => {
+                Swal.close(); // Ana ayarlar modalını kapat
+                Swal.fire({
+                    title: '⬆️ Not Yükle/Geri Yükle',
+                    html: `
+                        <p style="color: #ccc; margin-top: 15px;">İndirdiğiniz not defteri dosyasını (.json) buradan yükleyerek notlarınızı geri yükleyebilirsiniz. <strong style="color: #f00;">Bu işlem mevcut notlarınızın üzerine yazabilir!</strong></p>
+                        <input type="file" id="swalUploadNotesInput" accept=".json" style="display: none;">
+                        <label for="swalUploadNotesInput" class="custom-file-upload-button-swal">Dosya Seç</label>
+                        <p class="file-info-swal" id="swalSelectedFileName"></p>
+                    `,
+                    showCancelButton: true,
+                    cancelButtonText: 'İptal',
+                    showConfirmButton: false, // "Yükle" butonunu manuel kontrol edeceğiz
+                    showCloseButton: true,
+                    customClass: {
+                        container: 'swal2-container-upload'
+                    },
+                    didOpen: () => {
+                        const uploadInput = document.getElementById('swalUploadNotesInput');
+                        const fileNameDisplay = document.getElementById('swalSelectedFileName');
+
+                        uploadInput.addEventListener('change', (e) => {
+                            const file = e.target.files[0];
+                            if (file) {
+                                fileNameDisplay.textContent = `Seçilen Dosya: ${file.name}`;
+                                // Yükle butonunu etkinleştir veya göster (isterseniz)
+                                // Şu an için direkt handleFileUpload'ı çağıracağız.
+                            } else {
+                                fileNameDisplay.textContent = '';
+                            }
+                        });
+
+                        // Dosya seçildiğinde direkt yükleme işlemini başlatmak için
+                        document.querySelector('.custom-file-upload-button-swal').addEventListener('click', () => {
+                            uploadInput.click(); // Hidden input'u tıkla
+                        });
+
+                        // Kullanıcı dosya seçtikten sonra doğrudan handleFileUpload'ı çağırabiliriz
+                        uploadInput.addEventListener('change', handleFileUpload); // Önceki yanıttaki handleFileUpload fonksiyonu
+                    }
+                });
+            });
+            // *** YENİ KOD BURADA BİTTİ ***
+			
+			
+      document.getElementById('ayarlarHesapSil').addEventListener('click', () => { // Yeni buton dinleyicisi
+        Swal.close(); // SweetAlert'i kapat
+        hesapSil(); // Hesap silme fonksiyonunu çağır
+      });
+	  
+    }
   });
 });
 
@@ -1311,122 +1496,45 @@ document.getElementById('yardimAc').addEventListener('click', function(e) {
 
 
 function notlariIndir() {
-    Swal.fire({
-        title: 'Şifre Gerekli', // Başlık: Şifre gerekli
-        input: 'password',     // Giriş tipi: Şifre
-        inputLabel: 'İndirme şifrenizi girin', // Giriş alanı etiketi
-        inputPlaceholder: '•••••••',          // Yer tutucu metin
-        showCancelButton: true,              // İptal butonu göster
-        confirmButtonText: 'İndir',          // Onay butonu metni
-        cancelButtonText: 'Vazgeç',          // İptal butonu metni
-        inputValidator: (value) => {         // Giriş doğrulayıcı
-            if (!value) {
-                return 'Şifre boş bırakılamaz!'; // Şifre boşsa uyarı ver
-            }
-        }
-    }).then((result) => {
-        // Kullanıcı "İndir" butonuna bastıysa ve bir değer girdiyse
-        if (result.isConfirmed) {
-            // **ÖNEMLİ:** Buradaki "kullaniciSifresi" değişkenini kendi uygulamanızdaki
-            // doğru şifre ile değiştirmelisiniz. Bu şifreyi başka bir yerden (örn: bir sabitten) almanız en iyisidir.
-            // Örneğin: const kullaniciSifresi = "sizinGercekSifreniz";
-            // BU SATIRI KENDİ ŞİFRENİZLE DEĞİŞTİRİN!
+    const user = firebase.auth().currentUser;
+    if (!user) {
+        Swal.fire('Lütfen önce giriş yapın!');
+        return;
+    }
 
-            if (result.value === kullaniciSifresi) { // Girilen şifre doğru mu kontrol et
-                const user = firebase.auth().currentUser; // Giriş yapmış kullanıcıyı al
+    Promise.all([
+        firebase.database().ref('notlar/' + user.uid + '/not').once('value'),
+        firebase.database().ref('kayitlar/' + user.uid).once('value')
+    ]).then(([notSnapshot, kayitSnapshot]) => {
+        const data = {
+            notlar: notSnapshot.val() || {},
+            kayitlar: kayitSnapshot.val() || {}
+        };
 
-                if (!user) { // Kullanıcı giriş yapmamışsa
-                    Swal.fire({
-                        text: 'Lütfen önce giriş yapın!',
-                        confirmButtonText: 'Tamam'
-                    });
-                    return; // Fonksiyondan çık
-                }
+        const json = JSON.stringify(data, null, 2);
+        const blob = new Blob([json], { type: 'application/json;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
 
-                // Kullanıcı giriş yapmış ve şifre doğruysa:
-                // Hem notları hem de kayıtları aynı anda Firebase'den çek
-                Promise.all([
-                    firebase.database().ref('notlar/' + user.uid + '/not').once('value'),
-                    firebase.database().ref('kayitlar/' + user.uid).once('value')
-                ]).then(([notSnapshot, kayitSnapshot]) => {
-                    const notData = notSnapshot.val();   // Not verilerini al
-                    const kayitlar = kayitSnapshot.val(); // Kayıt verilerini al
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `not_defteri_${new Date().toISOString().slice(0, 10)}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
 
-                    // Dosya içeriğini oluşturmaya başla
-                    let icerik = `Kişisel Not Defteri - ${new Date().toLocaleDateString()}\n\n`;
-
-                    // Notları içeriğe ekle
-                    if (notData && notData.metin) {
-                        icerik += `NOTLARIM:\n--------------------------------\n` +
-                            `${notData.metin}\n` +
-                            `--------------------------------\n\n`;
-                    }
-
-                    // Kayıtları içeriğe ekle
-                    if (kayitlar) {
-                        icerik += `KAYITLARIM:\n--------------------------------\n`;
-
-                        for (const key in kayitlar) {
-                            if (kayitlar.hasOwnProperty(key)) {
-                                const kayit = kayitlar[key];
-                                icerik += `Ad: ${kayit.ad || '-'}\n` +
-                                    `Soyad: ${kayit.soyad || '-'}\n` +
-                                    `Telefon: ${kayit.telefon || '-'}\n` +
-                                    `Tarih: ${new Date(kayit.tarih).toLocaleString()}\n` +
-                                    `--------------------------------\n`;
-                            }
-                        }
-                    }
-
-                    // Eğer hiç not veya kayıt yoksa
-                    if ((!notData || !notData.metin) && !kayitlar) {
-                        Swal.fire({
-                            text: 'İndirilecek veri bulunamadı!',
-                            icon: 'info',
-                            confirmButtonText: 'Tamam'
-                        });
-                        return; // Fonksiyondan çık
-                    }
-
-                    // Oluşturulan içeriği bir metin dosyasına (Blob) dönüştür
-                    const blob = new Blob([icerik], { type: 'text/plain;charset=utf-8' });
-                    const url = URL.createObjectURL(blob); // Dosya için geçici bir URL oluştur
-
-                    // Gizli bir indirme linki oluştur ve otomatik olarak tıkla
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = `not_defterim_${new Date().toISOString().slice(0, 10)}.txt`; // Dosya adı
-                    document.body.appendChild(a); // Linki sayfaya ekle
-                    a.click(); // Linke tıkla (indirmeyi başlat)
-
-                    // Temizlik: Geçici linki ve URL'yi kaldır
-                    setTimeout(() => {
-                        document.body.removeChild(a);
-                        window.URL.revokeObjectURL(url);
-                    }, 100);
-
-                    // Başarılı indirme mesajı göster
-                    Swal.fire({
-                        text: 'Not defteriniz indiriliyor...',
-                        icon: 'success',
-                        timer: 1500,
-                        showConfirmButton: false
-                    });
-                }).catch(error => { // Veri çekme veya oluşturma sırasında hata olursa
-                    console.error("Veri indirilirken hata:", error);
-                    Swal.fire({
-                        text: 'Veri indirilirken bir hata oluştu!',
-                        icon: 'error',
-                        confirmButtonText: 'Tamam'
-                    });
-                });
-            } else { // Şifre yanlışsa
-                Swal.fire('Hatalı Şifre', 'Oturum Kapatıldı...', 'error');
-				logout();
-            }
-        }
+        Swal.fire({
+            icon: 'success',
+            title: 'Veriler .json olarak indirildi!',
+            showConfirmButton: false,
+            timer: 1500
+        });
+    }).catch(error => {
+        console.error("İndirme hatası:", error);
+        Swal.fire('Veri indirilemedi!');
     });
 }
+
 let kullaniciSifresi = ""; // global
 
 // Şifre Sıfırlama Fonksiyonu
@@ -1679,7 +1787,282 @@ function degistirEmail() {
         }
     });
 }
+
+
+// Şifre Göster/Gizle Fonksiyonu
+function togglePasswordVisibility(inputId, iconElement) {
+    const passwordInput = document.getElementById(inputId);
+    if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        iconElement.textContent = '🙈'; // Göz ikonunu kapalı göze çevir
+    } else {
+        passwordInput.type = 'password';
+        iconElement.textContent = '🐵'; // Göz ikonunu açık göze çevir
+    }
+}
+
+
+// YENİ FONKSİYON: Hesap Silme İşlemi
+function hesapSil() {
+    const user = firebase.auth().currentUser;
+
+    if (!user) {
+        Swal.fire({
+            text: 'Lütfen önce giriş yapın!',
+            confirmButtonText: 'Tamam'
+        });
+        return;
+    }
+
+    Swal.fire({
+        title: 'Hesabı Kalıcı Olarak Sil?',
+        html: `
+            <p style="color: #ffcc00; font-weight: bold;">Bu işlem geri alınamaz!</p>
+            <p>Tüm notlarınız ve kayıtlarınız kalıcı olarak silinecektir.</p>
+            <input type="password" id="hesapSilSifre" class="swal2-input" placeholder="Hesabınızın şifresini girin">
+        `,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#e53935', // Kırmızı renk
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Evet, Hesabı Sil!',
+        cancelButtonText: 'Vazgeç',
+        preConfirm: () => {
+            const password = document.getElementById('hesapSilSifre').value.trim();
+            if (!password) {
+                Swal.showValidationMessage('Hesabı silmek için şifrenizi girmeniz gerekmektedir.');
+                return false;
+            }
+            return password;
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            const password = result.value;
+            const credential = firebase.auth.EmailAuthProvider.credential(user.email, password);
+
+            // Kullanıcının kimliğini tekrar doğrula
+            user.reauthenticateWithCredential(credential)
+                .then(() => {
+                    // Kimlik doğrulandı, şimdi Realtime Database'deki verileri sil
+                    return firebase.database().ref('notlar/' + user.uid).remove()
+                        .then(() => firebase.database().ref('kayitlar/' + user.uid).remove());
+                })
+                .then(() => {
+                    // Veritabanındaki veriler silindi, şimdi kullanıcı hesabını sil
+                    return user.delete();
+                })
+                .then(() => {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Hesap Silindi',
+                        text: 'Hesabınız ve tüm verileriniz başarıyla silindi.',
+                        confirmButtonText: 'Tamam'
+                    }).then(() => {
+                        logout(); // Hesabı sildikten sonra çıkış yap ve giriş ekranına dön
+                    });
+                })
+                .catch((error) => {
+                    console.error("Hesap silme hatası:", error);
+                    let errorMessage = "Hesap silinirken bir hata oluştu. Lütfen tekrar deneyin.";
+
+                    switch (error.code) {
+                        case 'auth/wrong-password':
+                        case 'auth/invalid-credential':
+                            errorMessage = 'Girdiğiniz şifre yanlış.';
+                            break;
+                        case 'auth/requires-recent-login':
+                            errorMessage = 'Güvenlik nedeniyle, bu işlem için lütfen yakın zamanda tekrar giriş yapın.';
+                            break;
+                        case 'auth/network-request-failed':
+                            errorMessage = 'İnternet bağlantınızda bir sorun var. Lütfen bağlantınızı kontrol edin.';
+                            break;
+                        default:
+                            errorMessage = `Hesap silinirken bir hata oluştu: ${error.message}`;
+                            break;
+                    }
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Hesap Silme Hatası',
+                        text: errorMessage
+                    });
+                });
+        }
+    });
+}
+
+
+// YENİ FONKSİYON: Şifre Değiştirme İşlemi
+function degistirSifre() {
+    const user = firebase.auth().currentUser;
+
+    if (!user) {
+        Swal.fire({
+            text: 'Lütfen önce giriş yapın!',
+            confirmButtonText: 'Tamam'
+        });
+        return;
+    }
+
+    Swal.fire({
+        title: 'Şifrenizi Değiştirin',
+        html: `
+            <input type="password" id="mevcutSifreInput" class="swal2-input" placeholder="Mevcut Şifreniz">
+            <input type="password" id="yeniSifreInput" class="swal2-input" placeholder="Yeni Şifreniz">
+            <input type="password" id="yeniSifreTekrarInput" class="swal2-input" placeholder="Yeni Şifre (Tekrar)">
+        `,
+        focusConfirm: false,
+        showCancelButton: true,
+        confirmButtonText: 'Şifreyi Değiştir',
+        cancelButtonText: 'İptal',
+        preConfirm: () => {
+            const mevcutSifre = document.getElementById('mevcutSifreInput').value.trim();
+            const yeniSifre = document.getElementById('yeniSifreInput').value.trim();
+            const yeniSifreTekrar = document.getElementById('yeniSifreTekrarInput').value.trim();
+
+            if (!mevcutSifre || !yeniSifre || !yeniSifreTekrar) {
+                Swal.showValidationMessage('Tüm alanları doldurmanız gerekmektedir.');
+                return false;
+            }
+            if (yeniSifre.length < 6) {
+                Swal.showValidationMessage('Yeni şifre en az 6 karakter olmalıdır.');
+                return false;
+            }
+            if (yeniSifre !== yeniSifreTekrar) {
+                Swal.showValidationMessage('Yeni şifreler eşleşmiyor.');
+                return false;
+            }
+            if (mevcutSifre === yeniSifre) {
+                Swal.showValidationMessage('Yeni şifreniz mevcut şifrenizle aynı olamaz.');
+                return false;
+            }
+            return { mevcutSifre, yeniSifre };
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            const { mevcutSifre, yeniSifre } = result.value;
+            const credential = firebase.auth.EmailAuthProvider.credential(user.email, mevcutSifre);
+
+            user.reauthenticateWithCredential(credential)
+                .then(() => {
+                    user.updatePassword(yeniSifre)
+                        .then(() => {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Şifre Değiştirildi!',
+                                text: 'Şifreniz başarıyla güncellendi.',
+                                confirmButtonText: 'Tamam'
+                            });
+                        })
+                        .catch((error) => {
+                            console.error("Şifre güncelleme hatası:", error);
+                            let errorMessage = "Şifre güncellenirken bir hata oluştu. Lütfen tekrar deneyin.";
+                            switch (error.code) {
+                                case 'auth/requires-recent-login':
+                                    errorMessage = 'Güvenlik nedeniyle, bu işlem için yakın zamanda tekrar giriş yapmanız gerekmektedir.';
+                                    break;
+                                case 'auth/weak-password':
+                                    errorMessage = 'Şifre çok zayıf. Lütfen en az 6 karakterli güçlü bir şifre belirleyin.';
+                                    break;
+                                case 'auth/network-request-failed':
+                                    errorMessage = 'İnternet bağlantınızda bir sorun var. Lütfen bağlantınızı kontrol edin.';
+                                    break;
+                                default:
+                                    errorMessage = `Şifre güncellenirken bir hata oluştu: ${error.message}`;
+                                    break;
+                            }
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Şifre Değiştirme Hatası',
+                                text: errorMessage
+                            });
+                        });
+                })
+                .catch((error) => {
+                    console.error("Şifre yeniden kimlik doğrulama hatası:", error);
+                    let errorMessage = "Mevcut şifreniz yanlış veya bir hata oluştu.";
+                    switch (error.code) {
+                        case 'auth/wrong-password':
+                        case 'auth/invalid-credential':
+                            errorMessage = 'Mevcut şifreniz yanlış.';
+                            break;
+                        case 'auth/network-request-failed':
+                            errorMessage = 'İnternet bağlantınızda bir sorun var. Lütfen bağlantınızı kontrol edin.';
+                            break;
+                        default:
+                            errorMessage = `Kimlik doğrulama sırasında bir hata oluştu: ${error.message}`;
+                            break;
+                    }
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Kimlik Doğrulama Hatası',
+                        text: errorMessage
+                    });
+                });
+        }
+    });
+}
+
+
+
+
+
+
+function handleFileUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function (e) {
+        try {
+            const jsonData = JSON.parse(e.target.result);
+            const user = firebase.auth().currentUser;
+            if (!user) {
+                Swal.fire('Lütfen önce giriş yapın!');
+                return;
+            }
+
+            // Notları ve kayıtları ayrı ayrı Firebase'e yaz
+            const updates = [];
+            if (jsonData.notlar) {
+                updates.push(firebase.database().ref('notlar/' + user.uid + '/not').set(jsonData.notlar));
+            }
+            if (jsonData.kayitlar) {
+                updates.push(firebase.database().ref('kayitlar/' + user.uid).set(jsonData.kayitlar));
+            }
+
+            Promise.all(updates).then(() => {
+                Swal.fire('✔️ Veriler başarıyla yüklendi!');
+                showContent(user.uid); // Listeyi güncelle
+            }).catch(err => {
+                console.error('Yükleme hatası:', err);
+                Swal.fire('Hata! Veriler yüklenemedi.');
+            });
+
+        } catch (err) {
+            console.error('JSON ayrıştırma hatası:', err);
+            Swal.fire('Hatalı dosya formatı!');
+        }
+    };
+
+    reader.readAsText(file);
+}
+
+
+
+       
 </script>
+
+
+    <footer class="app-footer">
+        <div class="footer-content">
+            <p>Uygulama Sürümü: 1.0.0</p>
+            <p class="footer-links">
+                <a href="/gizlilik-politikasi.html">Gizlilik Politikası</a> |
+                <a href="/kullanim-kosullari.html">Kullanım Koşulları</a>
+            </p>
+            <p>&copy; 2025 Note's. Tüm Hakları Saklıdır.</p>
+        </div>
+    </footer>
 
    </body>
 </html>
