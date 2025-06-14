@@ -578,7 +578,10 @@ body.login-active .app-footer {
     <button  id="vazgecBtn" style="display: none;">✖ Vazgeç</button>
 </div>
 
-    <h3>	✍️ Size Ait Notlar</h3>
+
+	<h3>✍️ Size Ait Notlar (<span id="notSayisi"></span>)</h3>
+
+	
     <ul id="isimlerListesi"></ul>
 </div>
 
@@ -973,6 +976,8 @@ function showContent(uid) {
                     </div>
                 `;
                 isimlerListesi.appendChild(li); // appendChild kullanıyoruz çünkü zaten sıralanmış dizi üzerinde dönüyoruz
+				const kayitSayisi = kayitlarDizisi.length;
+document.getElementById('notSayisi').textContent = kayitSayisi;
             }
             // **SİRULAMA MANTIĞI BİTTİ**
         }
