@@ -619,70 +619,41 @@ body.login-active .app-footer {
 
         let currentEditKey = null;
 		
-		  // oturum zamanlayıcısı star
-
-let sessionTimeout = null;
-
-
+		  // oturum zamanlayıcısı start
+		let sessionTimeout = null;
 
 function baslatOturumZamani() {
-
-
-
-// Mevcut zamanlayıcı varsa temizle
-
-if (sessionTimeout) {
-
-clearTimeout(sessionTimeout);
-
-sessionTimeout = null; // ZAMANLAYICIYI BURADA NULL YAPARAK RESETLE
-
+   
+	
+	  // Mevcut zamanlayıcı varsa temizle
+    if (sessionTimeout) {
+        clearTimeout(sessionTimeout);
+        sessionTimeout = null; // ZAMANLAYICIYI BURADA NULL YAPARAK RESETLE
+    }
+	
+	
+    sessionTimeout = setTimeout(() => {
+        firebase.auth().signOut().then(() => {
+            Swal.fire({
+                icon: 'info',
+                title: 'Oturum Süresi Doldu',
+                text: 'Lütfen tekrar giriş yapın.',
+                confirmButtonText: 'Tamam'
+            }).then(() => {
+                document.getElementById('loginSection').style.display = "block";
+                document.getElementById('kayitListesi').style.display = "none";
+                document.getElementById('signupSection').style.display = "none";
+                document.getElementById('emailInput').value = "";
+                document.getElementById('passwordInput').value = "";
+				
+				 // *** BURAYA EKLEYECEĞİZ ***
+                // loginSection gösterildiğinde altbilgiyi gizle
+                toggleLoginScreen(true); // Altbilgiyi gizle
+            });
+        });
+    }, 30000); // 30 saniye
 }
 
-
-
-sessionTimeout = setTimeout(() => {
-
-firebase.auth().signOut().then(() => {
-
-Swal.fire({
-
-icon: 'info',
-
-title: 'Oturum Süresi Doldu',
-
-text: 'Lütfen tekrar giriş yapın.',
-
-confirmButtonText: 'Tamam'
-
-}).then(() => {
-
-document.getElementById('loginSection').style.display = "block";
-
-document.getElementById('kayitListesi').style.display = "none";
-
-document.getElementById('signupSection').style.display = "none";
-
-document.getElementById('emailInput').value = "";
-
-document.getElementById('passwordInput').value = "";
-
-
-// *** BURAYA EKLEYECEĞİZ ***
-
-// loginSection gösterildiğinde altbilgiyi gizle
-
-toggleLoginScreen(true); // Altbilgiyi gizle
-
-});
-
-});
-
-
-
-}, 60000); // 60 saniye
-
-}
 // oturum zamanlayıcısı finish
 
 
