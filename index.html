@@ -646,11 +646,21 @@ function baslatOturumZamani() {
                 document.getElementById('emailInput').value = "";
                 document.getElementById('passwordInput').value = "";
 				
-				 // *** BURAYA EKLEYECEĞİZ ***
+				// Oturum kapatma işlemi tamamlandığında ve giriş ekranı gösterildiğinde
+                // sessionTimeout'u null yaparak gelecekteki gereksiz popup'ları engelliyoruz.
+                sessionTimeout = null; 
+
                 // loginSection gösterildiğinde altbilgiyi gizle
                 toggleLoginScreen(true); // Altbilgiyi gizle
             });
+        }).catch((error) => {
+            // Oturum kapatma sırasında bir hata olursa (örneğin internet yoksa)
+            console.error("Oturum kapatma hatası:", error);
+            // Hata durumunda da zamanlayıcıyı sıfırlayabiliriz,
+            // veya kullanıcıya bir hata mesajı gösterebiliriz.
+            sessionTimeout = null;
         });
+
     }, 60000); // 60 saniye
 }
 
