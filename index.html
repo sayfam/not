@@ -619,40 +619,140 @@ body.login-active .app-footer {
 
         let currentEditKey = null;
 		
-		  // oturum zamanlayıcısı start
-		let sessionTimeout = null;
+		
+		
+		
+		// Oturum zaman aşımı süresi (milisaniye cinsinden, 1 dakika = 60000 ms)
+const SESSION_TIMEOUT = 60000; // Örnek: 1 dakika sonra çıkış
+const WARNING_TIME = 10000; // Çıkıştan 10 sn önce uyarı
 
-function baslatOturumZamani() {
-   
-	
-	  // Mevcut zamanlayıcı varsa temizle
-    if (sessionTimeout) {
-        clearTimeout(sessionTimeout);
-        sessionTimeout = null; // ZAMANLAYICIYI BURADA NULL YAPARAK RESETLE
-    }
-	
-	
-    sessionTimeout = setTimeout(() => {
-        firebase.auth().signOut().then(() => {
-            Swal.fire({
-                icon: 'info',
-                title: 'Oturum Süresi Doldu',
-                text: 'Lütfen tekrar giriş yapın.',
-                confirmButtonText: 'Tamam'
-            }).then(() => {
-                document.getElementById('loginSection').style.display = "block";
-                document.getElementById('kayitListesi').style.display = "none";
-                document.getElementById('signupSection').style.display = "none";
-                document.getElementById('emailInput').value = "";
-                document.getElementById('passwordInput').value = "";
-				
-				 // *** BURAYA EKLEYECEĞİZ ***
-                // loginSection gösterildiğinde altbilgiyi gizle
-                toggleLoginScreen(true); // Altbilgiyi gizle
-            });
+let logoutTimer; // Ana oturum zamanlayıcısı
+let warningTimer; // Uyarı zamanlayıcısı
+
+let lastActivityTime = Date.now(); // Son etkinlik zamanını takip etmek için
+let intervalId; // Ne kadar süre kaldığını periyodik olarak yazdırmak için
+
+/**
+ * Oturum zamanlayıcısını başlatır veya sıfırlar.
+ * Kullanıcı etkinliği algılandığında çağrılmalıdır.
+ * @param {string} [activityType='Manuel'] - Zamanlayıcıyı sıfırlayan etkinliğin türü.
+ */
+function resetSessionTimer(activityType = 'Manuel') {
+    clearTimeout(logoutTimer);
+    clearTimeout(warningTimer);
+    clearInterval(intervalId); // Mevcut interval'i temizle
+
+    lastActivityTime = Date.now(); // Son etkinlik zamanını güncelle
+    console.log(`Oturum zamanlayıcısı sıfırlandı. Neden: ${activityType}.`);
+
+    // Kalan süreyi konsola yazdırmak için bir interval başlat
+    intervalId = setInterval(() => {
+        const remainingTime = SESSION_TIMEOUT - (Date.now() - lastActivityTime);
+        const remainingSeconds = Math.ceil(remainingTime / 1000);
+        if (remainingSeconds > 0) {
+            console.log(`Oturum kapanmasına kalan süre: ${remainingSeconds} saniye.`);
+        } else {
+            clearInterval(intervalId); // Süre bittiğinde interval'i durdur
+        }
+    }, 5000); // Her 5 saniyede bir kalan süreyi yazdır
+
+    // Uyarı zamanlayıcısını başlat: Ana zaman aşımından WARNING_TIME önce tetiklenir
+    warningTimer = setTimeout(() => {
+        Swal.fire({
+            title: 'Oturum Süresi Dolmak Üzere!',
+            text: `${WARNING_TIME / 1000} saniye içinde otomatik olarak çıkış yapacaksınız. Oturumu açık tutmak için herhangi bir yere tıklayın veya bu pencereyi kapatın.`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Oturumu Açık Tut',
+            cancelButtonText: 'Şimdi Çıkış Yap',
+            reverseButtons: true,
+            timer: WARNING_TIME,
+            timerProgressBar: true,
+            allowOutsideClick: false,
+            didOpen: () => {
+                // SweetAlert açıldığında da zamanlayıcıyı sıfırla, kullanıcının etkileşimi sayılır
+                resetSessionTimer('SweetAlert Açıldı');
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                resetSessionTimer('SweetAlert Onaylandı');
+            } else if (result.dismiss === Swal.DismissReason.timer || result.isDismissed) {
+                performLogout();
+            }
         });
-    }, 30000); // 30 saniye
+    }, SESSION_TIMEOUT - WARNING_TIME);
+
+    // Asıl çıkış zamanlayıcısını başlat: SESSION_TIMEOUT süresi dolduğunda çalışır
+    logoutTimer = setTimeout(() => {
+        performLogout();
+    }, SESSION_TIMEOUT);
 }
+
+/**
+ * Kullanıcıyı çıkış yapar ve SweetAlert ile bilgilendirir.
+ */
+function performLogout() {
+    console.log("Oturum zamanlayıcısı sona erdi, çıkış yapılıyor.");
+    clearTimeout(logoutTimer); // Çıkış yaparken tüm zamanlayıcıları temizle
+    clearTimeout(warningTimer);
+    clearInterval(intervalId); // Kalan süre interval'ini de temizle
+
+    firebase.auth().signOut().then(() => {
+        Swal.fire({
+            icon: 'info',
+            title: 'Oturum Süresi Doldu',
+            text: 'Güvenliğiniz için oturumunuz kapatıldı. Lütfen tekrar giriş yapın.',
+            confirmButtonText: 'Tamam'
+        }).then(() => {
+            document.getElementById('loginSection').style.display = "block";
+            document.getElementById('kayitListesi').style.display = "none";
+            document.getElementById('signupSection').style.display = "none";
+            document.getElementById('emailInput').value = "";
+            document.getElementById('passwordInput').value = "";
+            toggleLoginScreen(true);
+			  // !!! BURAYA SAYFAYI YENİLEME KODUNU EKLEYİN !!!
+            // Bu, tüm JavaScript durumunu sıfırlayacaktır.
+            window.location.reload(); 
+        });
+    }).catch((error) => {
+        console.error("Çıkış yaparken hata:", error);
+        Swal.fire('Hata!', 'Çıkış yapılırken bir sorun oluştu.', 'error');
+    });
+}
+
+/**
+ * Kullanıcı etkileşimlerini dinlemek için olay dinleyicilerini kurar.
+ */
+function setupActivityListeners() {
+    const events = ['mousemove', 'keypress', 'scroll', 'click'];
+    events.forEach(event => {
+        document.addEventListener(event, (e) => resetSessionTimer(e.type)); // Etkinlik türünü resetSessionTimer'a gönder
+    });
+    console.log("Kullanıcı etkinlik dinleyicileri kuruldu.");
+}
+
+/**
+ * Firebase kimlik doğrulama durumu değiştiğinde çağrılır.
+ */
+firebase.auth().onAuthStateChanged(function(user) {
+    if (user) {
+        // Kullanıcı giriş yapmışsa
+        console.log("Kullanıcı giriş yaptı, oturum zamanlayıcısı başlatılıyor.");
+        resetSessionTimer('Giriş Yapıldı'); // Başlangıç etkinliğini belirt
+        setupActivityListeners(); // Etkinlik dinleyicilerini kur
+    } else {
+        // Kullanıcı çıkış yapmışsa veya giriş yapmamışsa zamanlayıcıları temizle
+        console.log("Kullanıcı çıkış yaptı veya giriş yapmadı, oturum zamanlayıcıları durduruldu.");
+        clearTimeout(logoutTimer);
+        clearTimeout(warningTimer);
+        clearInterval(intervalId); // Temizle
+    }
+});
+		
+
+
+
+
 
 // oturum zamanlayıcısı finish
 
@@ -755,7 +855,7 @@ function baslatOturumZamani() {
                 });
         }
 
-       
+       let kullaniciSifresi = ""; // global
        // Giriş Yapma Fonksiyonu
         function login() {
             const email = document.getElementById('emailInput').value.trim();
@@ -791,7 +891,7 @@ function baslatOturumZamani() {
                     if (user.emailVerified) {
                         showContent(user.uid);
                         document.getElementById('hosgeldinYazi').textContent = `Hoş geldiniz, ${user.email}`;
-                        baslatOturumZamani();
+              
                         document.getElementById('loginSection').style.display = "none";
                         document.getElementById('signupSection').style.display = "none";
                     } else {
@@ -1187,9 +1287,7 @@ document.getElementById('vazgecBtn').addEventListener('click', () => {
  
 
 
- 
-document.addEventListener('click', baslatOturumZamani);
-document.addEventListener('keydown', baslatOturumZamani);
+
 
 
   document.addEventListener("DOMContentLoaded", function () {
@@ -1540,7 +1638,7 @@ function notlariIndir() {
     });
 }
 
-let kullaniciSifresi = ""; // global
+
 
 // Şifre Sıfırlama Fonksiyonu
 function resetPassword() {
