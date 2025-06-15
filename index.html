@@ -619,51 +619,70 @@ body.login-active .app-footer {
 
         let currentEditKey = null;
 		
-		  // oturum zamanlayıcısı start
-		let sessionTimeout = null;
+		  // oturum zamanlayıcısı star
+
+let sessionTimeout = null;
+
+
 
 function baslatOturumZamani() {
-   
-	
-	  // Mevcut zamanlayıcı varsa temizle
-    if (sessionTimeout) {
-        clearTimeout(sessionTimeout);
-        sessionTimeout = null; // ZAMANLAYICIYI BURADA NULL YAPARAK RESETLE
-    }
-	
-	
-    sessionTimeout = setTimeout(() => {
-        firebase.auth().signOut().then(() => {
-            Swal.fire({
-                icon: 'info',
-                title: 'Oturum Süresi Doldu',
-                text: 'Lütfen tekrar giriş yapın.',
-                confirmButtonText: 'Tamam'
-            }).then(() => {
-                document.getElementById('loginSection').style.display = "block";
-                document.getElementById('kayitListesi').style.display = "none";
-                document.getElementById('signupSection').style.display = "none";
-                document.getElementById('emailInput').value = "";
-                document.getElementById('passwordInput').value = "";
-				
-				// Oturum kapatma işlemi tamamlandığında ve giriş ekranı gösterildiğinde
-                // sessionTimeout'u null yaparak gelecekteki gereksiz popup'ları engelliyoruz.
-                sessionTimeout = null; 
 
-                // loginSection gösterildiğinde altbilgiyi gizle
-                toggleLoginScreen(true); // Altbilgiyi gizle
-            });
-        }).catch((error) => {
-            // Oturum kapatma sırasında bir hata olursa (örneğin internet yoksa)
-            console.error("Oturum kapatma hatası:", error);
-            // Hata durumunda da zamanlayıcıyı sıfırlayabiliriz,
-            // veya kullanıcıya bir hata mesajı gösterebiliriz.
-            sessionTimeout = null;
-        });
 
-    }, 60000); // 60 saniye
+
+// Mevcut zamanlayıcı varsa temizle
+
+if (sessionTimeout) {
+
+clearTimeout(sessionTimeout);
+
+sessionTimeout = null; // ZAMANLAYICIYI BURADA NULL YAPARAK RESETLE
+
 }
 
+
+
+sessionTimeout = setTimeout(() => {
+
+firebase.auth().signOut().then(() => {
+
+Swal.fire({
+
+icon: 'info',
+
+title: 'Oturum Süresi Doldu',
+
+text: 'Lütfen tekrar giriş yapın.',
+
+confirmButtonText: 'Tamam'
+
+}).then(() => {
+
+document.getElementById('loginSection').style.display = "block";
+
+document.getElementById('kayitListesi').style.display = "none";
+
+document.getElementById('signupSection').style.display = "none";
+
+document.getElementById('emailInput').value = "";
+
+document.getElementById('passwordInput').value = "";
+
+
+// *** BURAYA EKLEYECEĞİZ ***
+
+// loginSection gösterildiğinde altbilgiyi gizle
+
+toggleLoginScreen(true); // Altbilgiyi gizle
+
+});
+
+});
+
+
+
+}, 60000); // 60 saniye
+
+}
 // oturum zamanlayıcısı finish
 
 
