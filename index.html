@@ -1505,6 +1505,7 @@ document.getElementById('ayarlarAc').addEventListener('click', function(e) {
         <button id="ayarlarEmailDegistir" class="swal2-styled">📧 E-posta Değiştir</button>
         <button id="ayarlarNotlariIndir" class="swal2-styled">⬇️ Notları İndir</button>
 		 <button id="ayarlarNotlariYukle" class="swal2-styled">⬆️ Notları Yükle/Geri Yükle</button>
+   	 <button id="ayarlarDriveYedekle" class="swal2-styled">🧩 Google Drive’a Yedekle</button>
 		<button id="ayarlarSifreDegistir" class="swal2-styled">🔒 Şifre Değiştir</button>
         <button id="ayarlarHesapSil" class="swal2-styled" style="background-color: #e53935;">🗑️ Hesabı Sil</button> </div>
     `,
@@ -1521,7 +1522,10 @@ document.getElementById('ayarlarAc').addEventListener('click', function(e) {
         Swal.close(); 
         degistirSifre(); // şifre değiştirme fonksiyonu çağır
       });
-
+  document.getElementById('ayarlarDriveYedekle').addEventListener('click', () => {
+  Swal.close();
+  yedekleDrive();
+});
 
       document.getElementById('ayarlarEmailDegistir').addEventListener('click', () => {
         Swal.close(); // SweetAlert'i kapat
@@ -2151,6 +2155,92 @@ function handleFileUpload(event) {
 }
 
 
+
+	   let GoogleAuth;
+const CLIENT_ID = "344034966705-8paqve5db6002isrh7ahjk6s2e1ps4ob.apps.googleusercontent.com";
+const SCOPES = 'https://www.googleapis.com/auth/drive.file';
+
+
+function initGoogleAuth() {
+    gapi.load('client:auth2', () => {
+        gapi.client.init({
+            clientId: CLIENT_ID,
+            scope: SCOPES
+        }).then(() => {
+            GoogleAuth = gapi.auth2.getAuthInstance();
+        }).catch(error => {
+            console.error('Google API init hatası:', error);
+        });
+    });
+}
+
+window.onload = function () {
+    const script = document.createElement("script");
+    script.src = "https://apis.google.com/js/api.js";
+    script.onload = initGoogleAuth;
+    document.head.appendChild(script);
+};
+
+
+function yedekleDrive() {
+    const user = firebase.auth().currentUser;
+    if (!user) {
+        Swal.fire('Lütfen önce giriş yapın!');
+        return;
+    }
+
+    if (!GoogleAuth) {
+        Swal.fire('Google API henüz yüklenmedi.');
+        return;
+    }
+
+    GoogleAuth.signIn().then(() => {
+        const googleUser = GoogleAuth.currentUser.get();
+        const accessToken = googleUser.getAuthResponse().access_token;
+
+        Promise.all([
+            firebase.database().ref('notlar/' + user.uid + '/not').once('value'),
+            firebase.database().ref('kayitlar/' + user.uid).once('value')
+        ]).then(([notSnapshot, kayitSnapshot]) => {
+            const data = {
+                notlar: notSnapshot.val() || {},
+                kayitlar: kayitSnapshot.val() || {}
+            };
+
+            const fileContent = JSON.stringify(data, null, 2);
+            const blob = new Blob([fileContent], { type: 'application/json' });
+
+            const metadata = {
+                name: `not_yedegi_${new Date().toISOString().slice(0, 10)}.json`,
+                mimeType: 'application/json'
+            };
+
+            const form = new FormData();
+            form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
+            form.append('file', blob);
+
+            fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+                method: 'POST',
+                headers: new Headers({ 'Authorization': 'Bearer ' + accessToken }),
+                body: form
+            }).then(response => {
+                if (!response.ok) throw new Error("Google API hatası");
+                return response.json();
+            }).then(data => {
+                Swal.fire('✅ Google Drive’a başarıyla yüklendi!');
+            }).catch(err => {
+                console.error("Yükleme hatası:", err);
+                Swal.fire('❌ Drive’a yüklenemedi!');
+            });
+        }).catch(error => {
+            console.error("Firebase veri çekme hatası:", error);
+            Swal.fire('Veriler alınırken hata oluştu.');
+        });
+    }).catch(error => {
+        console.error("Google giriş hatası:", error);
+        Swal.fire('Google hesabına giriş yapılamadı.');
+    });
+}
 
        
 </script>
