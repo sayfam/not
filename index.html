@@ -600,7 +600,21 @@ body.login-active .app-footer {
 
 
 <script src="https://apis.google.com/js/api.js" async defer></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const emailInput    = document.getElementById('emailInput');
+  const passwordInput = document.getElementById('passwordInput');
 
+  [emailInput, passwordInput].forEach(input => {
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();   // Formun varsayılan submit’ini engelle
+        login();              // Mevcut login() fonksiyonunu çağır
+      }
+    });
+  });
+});
+</script>
    <script>
    
    
