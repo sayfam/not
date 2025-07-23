@@ -1051,20 +1051,16 @@ function showContent(uid) {
 
         if (isimler) {
             // **BURADA SİRULAMA MANTIĞI DEĞİŞTİ**
-
-		 // **eklenen**
- li.innerHTML = `
-  <div>
-    <span>${isimler[key].ad || ''} <button class="copyIcon" onclick="copyTextFromLabel('${isimler[key].ad || ''}')">📋</button></span><br>
-    <span>${isimler[key].soyad || ''} <button class="copyIcon" onclick="copyTextFromLabel('${isimler[key].soyad || ''}')">📋</button></span><br>
-    <span>${isimler[key].telefon || ''} <button class="copyIcon" onclick="copyTextFromLabel('${isimler[key].telefon || ''}')">📋</button></span>
-  </div>
-  <div class="butonGrubu">
-    <button class="duzenleBtn" onclick="guncelle('${key}', '${isimler[key].ad || ''}', '${isimler[key].soyad || ''}', '${isimler[key].telefon || ''}')">Düzenle</button>
-    <button class="silBtn" onclick="sil('${key}')">Sil</button>
-  </div>
-`;
-		 // **eklenen**
+		     // **BURADA SİRULAMA MANTIĞI DEĞİŞTİ**
+            const kayitlarDizisi = [];
+            for (const key in isimler) {
+                if (isimler.hasOwnProperty(key)) {
+                    kayitlarDizisi.push({
+                        key: key,
+                        ...isimler[key] // Tüm kayıt verilerini al
+                    });
+                }
+            }
                 }
             }
 
