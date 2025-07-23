@@ -2258,26 +2258,34 @@ function yedekleDrive() {
 
 
 	// çerezleri silme butonu
-  function clearCookiesAndReload() {
+function clearCookiesAndReload() {
   const user = firebase.auth().currentUser;
 
   if (!user) {
     Swal.fire({
       icon: 'warning',
-      title: 'Uyarı',
-      text: 'Bu işlemi yapmak için önce giriş yapmalısınız!',
+      title: 'Giriş Yapınız',
+      text: 'Bu işlemi gerçekleştirmek için önce giriş yapmalısınız.',
       confirmButtonText: 'Tamam'
     });
     return;
   }
 
-  // Giriş yapılmışsa işlemleri yap
+  // Giriş yapılmışsa sadece local verileri temizle ve sayfayı yenile
   localStorage.clear();
   sessionStorage.clear();
-  firebase.auth().signOut().then(() => {
+
+  Swal.fire({
+    icon: 'success',
+    title: 'Temizlendi!',
+    text: 'Tarayıcı verileri temizlendi. Sayfa yeniden yüklenecek...',
+    showConfirmButton: false,
+    timer: 1500
+  }).then(() => {
     location.reload();
   });
-} 
+}
+
 </script>
 
 
