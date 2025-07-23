@@ -2286,9 +2286,10 @@ function yedekleDrive() {
 
 
 	// çerezleri silme butonu
-   function clearCookiesAndReload() {
+function clearCookiesAndReload() {
   const user = firebase.auth().currentUser;
 
+  // Giriş yapılmamışsa: sadece uyarı ver ve çık
   if (!user) {
     Swal.fire({
       icon: 'warning',
@@ -2296,23 +2297,25 @@ function yedekleDrive() {
       text: 'Bu işlemi gerçekleştirmek için önce giriş yapmalısınız.',
       confirmButtonText: 'Tamam'
     });
-    return;
+    return; // 🔴 BURASI ÇOK ÖNEMLİ
   }
 
-  // Giriş yapılmışsa sadece local verileri temizle ve sayfayı yenile
+  // Giriş yapılmışsa: verileri temizle ve yenile
   localStorage.clear();
   sessionStorage.clear();
 
   Swal.fire({
     icon: 'success',
-    title: 'Temizlendi!',
-    text: 'Tekrar giriş yapınız...',
-    showConfirmButton: false,
-    timer: 1500
+    title: 'Çerez Bilgisi!',
+    text: 'Eğer bilgileriniz gözükmüyorsa tarayıcınızda çerezleri silmeniz gerekiyor.',
+	confirmButtonText: 'Tamam',
+    
+    
   }).then(() => {
     location.reload();
   });
 }
+
 
 
 function kopyala(metin) {
@@ -2353,8 +2356,10 @@ function kopyala(metin) {
             <p>Uygulama Sürümü: 1.0.0</p>
             <p class="footer-links">
                 <a href="/gizlilik-politikasi.html">Gizlilik Politikası</a> |
-                <a href="/kullanim-kosullari.html">Kullanım Koşulları</a>	|
-                <a href="javascript:void(0);" onclick="clearCookiesAndReload()">ClearCookies</a>
+                <a href="/kullanim-kosullari.html">Kullanım Koşulları</a>
+                 <p class="footer-links">
+            <a href="javascript:void(0);" onclick="clearCookiesAndReload()">Bilgilerim neden görünmüyor?</a>
+        </p>
             </p>
             <p>&copy; 2025 Note's. Tüm Hakları Saklıdır.</p>
         </div>
