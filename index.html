@@ -2256,7 +2256,30 @@ function yedekleDrive() {
     });
 }
 
-       
+
+	// çerezleri silme butonu
+     function clearCookiesAndReload() {
+  // Tüm localStorage, sessionStorage ve auth oturumunu sil
+  localStorage.clear();
+  sessionStorage.clear();
+  
+  firebase.auth().signOut().then(() => {
+    // Sayfayı yenile
+    location.reload();
+  });
+}  
+</script>
+
+<script>
+// çerezleri otomatik sil
+  firebase.auth().onAuthStateChanged(function(user) {
+    if (!user) {
+      // Kullanıcı giriş yapmamış gibi, ama cookie belki bozuldu
+      firebase.auth().signOut().then(() => {
+        location.reload(); // Oturumdan çıkınca sayfayı yenile
+      });
+    }
+  });
 </script>
 
 
@@ -2269,6 +2292,10 @@ function yedekleDrive() {
             </p>
             <p>&copy; 2025 Note's. Tüm Hakları Saklıdır.</p>
         </div>
+		<div style="text-align:center; margin-top:20px;">
+  <button onclick="clearCookiesAndReload()">🧹 Giriş Sorunu Çöz</button>
+</div>
+
     </footer>
 
    </body>
