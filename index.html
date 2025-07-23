@@ -2258,16 +2258,26 @@ function yedekleDrive() {
 
 
 	// çerezleri silme butonu
-     function clearCookiesAndReload() {
-  // Tüm localStorage, sessionStorage ve auth oturumunu sil
+  function clearCookiesAndReload() {
+  const user = firebase.auth().currentUser;
+
+  if (!user) {
+    Swal.fire({
+      icon: 'warning',
+      title: 'Uyarı',
+      text: 'Bu işlemi yapmak için önce giriş yapmalısınız!',
+      confirmButtonText: 'Tamam'
+    });
+    return;
+  }
+
+  // Giriş yapılmışsa işlemleri yap
   localStorage.clear();
   sessionStorage.clear();
-  
   firebase.auth().signOut().then(() => {
-    // Sayfayı yenile
     location.reload();
   });
-}  
+} 
 </script>
 
 
