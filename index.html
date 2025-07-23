@@ -460,9 +460,6 @@ flex: 1; /* Tüm boşluğu kaplasın */
 body.login-active .app-footer {
     display: none;
 }
-
-
-
     </style>
 </head>
 <body>
@@ -1051,7 +1048,6 @@ function showContent(uid) {
 
         if (isimler) {
             // **BURADA SİRULAMA MANTIĞI DEĞİŞTİ**
-		     // **BURADA SİRULAMA MANTIĞI DEĞİŞTİ**
             const kayitlarDizisi = [];
             for (const key in isimler) {
                 if (isimler.hasOwnProperty(key)) {
@@ -1059,8 +1055,6 @@ function showContent(uid) {
                         key: key,
                         ...isimler[key] // Tüm kayıt verilerini al
                     });
-                }
-            }
                 }
             }
 
@@ -2264,38 +2258,16 @@ function yedekleDrive() {
 
 
 	// çerezleri silme butonu
-function clearCookiesAndReload() {
-  const user = firebase.auth().currentUser;
-
-  if (!user) {
-    Swal.fire({
-      icon: 'warning',
-      title: 'Giriş Yapınız',
-      text: 'Bu işlemi gerçekleştirmek için önce giriş yapmalısınız.',
-      confirmButtonText: 'Tamam'
-    });
-    return;
-  }
-
-  // Giriş yapılmışsa sadece local verileri temizle ve sayfayı yenile
+     function clearCookiesAndReload() {
+  // Tüm localStorage, sessionStorage ve auth oturumunu sil
   localStorage.clear();
   sessionStorage.clear();
-
-  Swal.fire({
-    icon: 'success',
-    title: 'Temizlendi!',
-    text: 'Tarayıcı verileri temizlendi. Sayfa yeniden yüklenecek...',
-    showConfirmButton: false,
-    timer: 1500
-  }).then(() => {
+  
+  firebase.auth().signOut().then(() => {
+    // Sayfayı yenile
     location.reload();
   });
-}
-
-
-
-
-
+}  
 </script>
 
 
@@ -2311,7 +2283,7 @@ function clearCookiesAndReload() {
             <p>&copy; 2025 Note's. Tüm Hakları Saklıdır.</p>
         </div>
 		<div style="text-align:center; margin-top:20px;">
-  <button onclick="clearCookiesAndReload()">🧹 Bilgilerimi Getir</button>
+  <button onclick="clearCookiesAndReload()">🧹 Giriş Sorunu Çöz</button>
 </div>
 
     </footer>
