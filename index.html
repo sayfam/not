@@ -460,6 +460,25 @@ flex: 1; /* Tüm boşluğu kaplasın */
 body.login-active .app-footer {
     display: none;
 }
+
+.listeSatiri .kopyalaBtn {
+    background-color: #4a6fa5;
+    color: white;
+    margin-right: 5px;
+    width: 30px;
+    padding: 5px;
+    font-size: 12px;
+}
+
+.listeSatiri .kopyalaBtn:hover {
+    background-color: #3a5a80;
+}
+
+.listeSatiri .bilgiSatiri {
+    display: flex;
+    align-items: center;
+    margin-bottom: 5px;
+}
     </style>
 </head>
 <body>
@@ -1077,18 +1096,27 @@ function showContent(uid) {
                 li.id = key; // Kaydırma için ID ataması hala önemli!
 
               // BURADA DEĞİŞİKLİK YAPILIYOR: kayitZamani div'i eklendi
-                li.innerHTML = `
-                    <div class="kayitZamani">${new Date(kayit.tarih).toLocaleString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</div>
-                    <div>
-                        <span>${linkeDonustur(kayit.ad)}</span><br>
-                        <span>${linkeDonustur(kayit.soyad)}</span><br>
-                        <span>${linkeDonustur(kayit.telefon)}</span>
-                    </div>
-                    <div class="butonGrubu">
-                        <button class="duzenleBtn" onclick="guncelle('${key}', '${kayit.ad || ''}', '${kayit.soyad || ''}', '${kayit.telefon || ''}')">Düzenle</button>
-                        <button class="silBtn" onclick="sil('${key}')">Sil</button>
-                    </div>
-                `;
+             li.innerHTML = `
+    <div class="kayitZamani">${new Date(kayit.tarih).toLocaleString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</div>
+    <div>
+        <div class="bilgiSatiri">
+            <button class="kopyalaBtn" onclick="kopyala('${kayit.ad || ''}')">⎘</button>
+            <span>${linkeDonustur(kayit.ad)}</span>
+        </div>
+        <div class="bilgiSatiri">
+            <button class="kopyalaBtn" onclick="kopyala('${kayit.soyad || ''}')">⎘</button>
+            <span>${linkeDonustur(kayit.soyad)}</span>
+        </div>
+        <div class="bilgiSatiri">
+            <button class="kopyalaBtn" onclick="kopyala('${kayit.telefon || ''}')">⎘</button>
+            <span>${linkeDonustur(kayit.telefon)}</span>
+        </div>
+    </div>
+    <div class="butonGrubu">
+        <button class="duzenleBtn" onclick="guncelle('${key}', '${kayit.ad || ''}', '${kayit.soyad || ''}', '${kayit.telefon || ''}')">Düzenle</button>
+        <button class="silBtn" onclick="sil('${key}')">Sil</button>
+    </div>
+`;
                 isimlerListesi.appendChild(li); // appendChild kullanıyoruz çünkü zaten sıralanmış dizi üzerinde dönüyoruz
 				const kayitSayisi = kayitlarDizisi.length;
 document.getElementById('notSayisi').textContent = kayitSayisi;
@@ -2258,16 +2286,63 @@ function yedekleDrive() {
 
 
 	// çerezleri silme butonu
-     function clearCookiesAndReload() {
-  // Tüm localStorage, sessionStorage ve auth oturumunu sil
+   function clearCookiesAndReload() {
+  const user = firebase.auth().currentUser;
+
+  if (!user) {
+    Swal.fire({
+      icon: 'warning',
+      title: 'Giriş Yapınız',
+      text: 'Bu işlemi gerçekleştirmek için önce giriş yapmalısınız.',
+      confirmButtonText: 'Tamam'
+    });
+    return;
+  }
+
+  // Giriş yapılmışsa sadece local verileri temizle ve sayfayı yenile
   localStorage.clear();
   sessionStorage.clear();
-  
-  firebase.auth().signOut().then(() => {
-    // Sayfayı yenile
+
+  Swal.fire({
+    icon: 'success',
+    title: 'Temizlendi!',
+    text: 'Tekrar giriş yapınız...',
+    showConfirmButton: false,
+    timer: 1500
+  }).then(() => {
     location.reload();
   });
-}  
+}
+
+
+function kopyala(metin) {
+    if (!metin) return;
+    
+    // Geçici bir textarea oluştur ve kopyala
+    const textarea = document.createElement('textarea');
+    textarea.value = metin;
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand('copy');
+    document.body.removeChild(textarea);
+    
+    // Kullanıcıya geri bildirim ver
+    const toast = document.createElement('div');
+    toast.textContent = 'Kopyalandı!';
+    toast.style.position = 'fixed';
+    toast.style.bottom = '20px';
+    toast.style.right = '20px';
+    toast.style.backgroundColor = '#4CAF50';
+    toast.style.color = 'white';
+    toast.style.padding = '10px 20px';
+    toast.style.borderRadius = '5px';
+    toast.style.zIndex = '9999';
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        document.body.removeChild(toast);
+    }, 2000);
+}
 </script>
 
 
@@ -2278,12 +2353,12 @@ function yedekleDrive() {
             <p>Uygulama Sürümü: 1.0.0</p>
             <p class="footer-links">
                 <a href="/gizlilik-politikasi.html">Gizlilik Politikası</a> |
-                <a href="/kullanim-kosullari.html">Kullanım Koşulları</a>
+                <a href="/kullanim-kosullari.html">Kullanım Koşulları</a>	|
+                <a href="javascript:void(0);" onclick="clearCookiesAndReload()">ClearCookies</a>
             </p>
             <p>&copy; 2025 Note's. Tüm Hakları Saklıdır.</p>
         </div>
 		<div style="text-align:center; margin-top:20px;">
-  <button onclick="clearCookiesAndReload()">🧹 Giriş Sorunu Çöz</button>
 </div>
 
     </footer>
