@@ -460,6 +460,22 @@ flex: 1; /* Tüm boşluğu kaplasın */
 body.login-active .app-footer {
     display: none;
 }
+
+	    .copyIcon {
+  background: none;
+  border: none;
+  color: #ccc;
+  cursor: pointer;
+  font-size: 14px;
+  margin-left: 6px;
+  padding: 0;
+  transition: color 0.2s ease;
+}
+
+.copyIcon:hover {
+  color: #03a9f4;
+}
+
     </style>
 </head>
 <body>
@@ -1048,13 +1064,25 @@ function showContent(uid) {
 
         if (isimler) {
             // **BURADA SİRULAMA MANTIĞI DEĞİŞTİ**
-            const kayitlarDizisi = [];
-            for (const key in isimler) {
-                if (isimler.hasOwnProperty(key)) {
-                    kayitlarDizisi.push({
-                        key: key,
-                        ...isimler[key] // Tüm kayıt verilerini al
-                    });
+
+		 // **eklenen**
+           kayitlarDizisi.forEach(kayit => {
+    const li = document.createElement('li');
+    li.classList.add('listeSatiri');
+    li.innerHTML = `
+        <div>
+            <span>${kayit.ad || ''} <button class="copyIcon" onclick="copyTextFromLabel('${kayit.ad || ''}')">📋</button></span><br>
+            <span>${kayit.soyad || ''} <button class="copyIcon" onclick="copyTextFromLabel('${kayit.soyad || ''}')">📋</button></span><br>
+            <span>${kayit.telefon || ''} <button class="copyIcon" onclick="copyTextFromLabel('${kayit.telefon || ''}')">📋</button></span>
+        </div>
+        <div class="butonGrubu">
+            <button class="duzenleBtn" onclick="guncelle('${kayit.key}', '${kayit.ad || ''}', '${kayit.soyad || ''}', '${kayit.telefon || ''}')">Düzenle</button>
+            <button class="silBtn" onclick="sil('${kayit.key}')">Sil</button>
+        </div>
+    `;
+    isimlerListesi.appendChild(li);
+});
+		 // **eklenen**
                 }
             }
 
@@ -2284,6 +2312,27 @@ function clearCookiesAndReload() {
   }).then(() => {
     location.reload();
   });
+}
+
+
+
+// kopyalama işlemi yapar
+	   function copyTextFromLabel(text) {
+  if (!text) return;
+
+  navigator.clipboard.writeText(text)
+    .then(() => {
+      Swal.fire({
+        icon: 'success',
+        title: 'Kopyalandı!',
+        text: `"${text}" panoya kopyalandı`,
+        timer: 1200,
+        showConfirmButton: false
+      });
+    })
+    .catch(err => {
+      console.error('Kopyalama hatası:', err);
+    });
 }
 
 </script>
