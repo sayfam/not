@@ -2270,17 +2270,7 @@ function yedekleDrive() {
 }  
 </script>
 
-<script>
-// çerezleri otomatik sil
-  firebase.auth().onAuthStateChanged(function(user) {
-    if (!user) {
-      // Kullanıcı giriş yapmamış gibi, ama cookie belki bozuldu
-      firebase.auth().signOut().then(() => {
-        location.reload(); // Oturumdan çıkınca sayfayı yenile
-      });
-    }
-  });
-</script>
+
 
 
     <footer class="app-footer">
